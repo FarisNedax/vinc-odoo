@@ -63,7 +63,7 @@
         <t t-set="brand_short_name" t-value="request.env['ir.config_parameter'].sudo().get_param('qr_code_odoo.brand_short_name', 'Vinc')"/>
             <div class="vg-magic">
                 <div class="mg-card">
-                    <div class="mg-logo" aria-hidden="true"><img src="/qr_code_odoo/brand/icon" alt="" style="max-width:100%;max-height:100%;object-fit:contain;"/></div>
+                    <div class="mg-logo" aria-hidden="true"><img src="/qr_code_odoo/brand/icon" alt="Logo" style="max-width:100%;max-height:100%;object-fit:contain;"/></div>
                     <div class="mg-eyebrow">You're invited to <t t-out="brand_name"/></div>
                     <h1 class="mg-title">Set your <em>password</em>.</h1>
                     <p class="mg-sub">

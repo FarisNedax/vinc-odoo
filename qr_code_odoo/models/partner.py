@@ -1350,13 +1350,11 @@ class PartnerVCard(models.Model):
         string="Enable Automated Email",
         default=True,
         help="Automatically send an email to new leads using your email marketing system",
-        invisible="enable_instant_leadback != True"
     )
     leadback_enable_messaging = fields.Boolean(
         string="Enable Click to Chat",
         default=True,
         help="Generate click-to-chat links for messaging platforms (WhatsApp, Viber, Telegram)",
-        invisible="enable_instant_leadback != True"
     )
     leadback_email_template_preset = fields.Selection(
         [
@@ -1370,19 +1368,16 @@ class PartnerVCard(models.Model):
         string="Email Template",
         default='friendly',
         help="Choose a pre-built email template or create your own",
-        invisible="enable_instant_leadback != True or leadback_send_email != True"
     )
     leadback_email_subject = fields.Char(
         string="Subject",
         default="Great connecting with you",
         help="Subject line for the automated welcome email",
-        invisible="enable_instant_leadback != True or leadback_send_email != True"
     )
     leadback_email_template = fields.Html(
         string="Email Body",
         default="<p>Hi {contact_name},</p><p>Thanks again for sharing your contact details. Just wanted to let you know I received your message.</p>{if booking_url}<p>If you'd like to continue our conversation or set up some time, you can book a slot here:</p><p><a href='{booking_url}'>{booking_url}</a></p>{/if}<p>Talk soon,<br/>{owner_name}</p>",
         help="HTML email template. Use placeholders like {contact_name}, {first_name}, {vcard_url}, {booking_url}, {owner_name}. Use {placeholder|fallback} for fallback values. Use {if field}...{/if} for conditional blocks.",
-        invisible="enable_instant_leadback != True or leadback_send_email != True or leadback_email_template_preset != 'custom'"
     )
     leadback_email_delay_preset = fields.Selection(
         [
@@ -1396,20 +1391,17 @@ class PartnerVCard(models.Model):
         string="Email Delay Preset",
         default='immediate',
         help="Quick preset for email delay, or choose Custom to set manually",
-        invisible="enable_instant_leadback != True or leadback_send_email != True"
     )
     leadback_email_delay_type = fields.Selection(
         [('minutes', 'Minutes'), ('hours', 'Hours'), ('days', 'Days')],
         string="Email Send Delay Type",
         default='minutes',
         help="Delay type for sending automated email (only used when Custom preset is selected)",
-        invisible="enable_instant_leadback != True or leadback_send_email != True or leadback_email_delay_preset != 'custom'"
     )
     leadback_email_delay = fields.Integer(
         string="Email Delay",
         default=0,
         help="How long to wait before sending the email (only used when Custom preset is selected)",
-        invisible="enable_instant_leadback != True or leadback_send_email != True or leadback_email_delay_preset != 'custom'"
     )
     leadback_message_template_preset = fields.Selection(
         [
@@ -1422,13 +1414,11 @@ class PartnerVCard(models.Model):
         string="Message Template",
         default='friendly',
         help="Choose a pre-built message template or create your own",
-        invisible="enable_instant_leadback != True or leadback_enable_messaging != True"
     )
     leadback_message_template = fields.Text(
         string="Message Body",
         default="Hi {contact_name}! Thanks for sharing your details — I got your message.\n\n{if booking_url}If you'd like to continue the conversation or set up a time, here's my booking link:\n{booking_url}{/if}",
         help="Template for messaging links (WhatsApp/Viber/Telegram). Use placeholders like {contact_name}, {first_name}, {vcard_url}, {booking_url}, {owner_name}. Use {placeholder|fallback} for fallback values. Use {if field}...{/if} for conditional blocks.",
-        invisible="enable_instant_leadback != True or leadback_enable_messaging != True or leadback_message_template_preset != 'custom'"
     )
     leadback_message_delay_preset = fields.Selection(
         [
@@ -1442,20 +1432,17 @@ class PartnerVCard(models.Model):
         string="Message Delay Preset",
         default='immediate',
         help="Quick preset for message delay, or choose Custom to set manually",
-        invisible="enable_instant_leadback != True or leadback_enable_messaging != True"
     )
     leadback_message_delay_type = fields.Selection(
         [('minutes', 'Minutes'), ('hours', 'Hours'), ('days', 'Days')],
         string="Message Send Delay Type",
         default='minutes',
         help="Delay type for generating messaging links (only used when Custom preset is selected)",
-        invisible="enable_instant_leadback != True or leadback_enable_messaging != True or leadback_message_delay_preset != 'custom'"
     )
     leadback_message_delay = fields.Integer(
         string="Message Delay",
         default=0,
         help="How long to wait before generating messaging links (only used when Custom preset is selected)",
-        invisible="enable_instant_leadback != True or leadback_enable_messaging != True or leadback_message_delay_preset != 'custom'"
     )
     leadback_channels = fields.Many2many(
         'leadback.messaging.channel',
@@ -1464,7 +1451,6 @@ class PartnerVCard(models.Model):
         'channel_id',
         string="Messaging Channels",
         help="Select one or more messaging channels to send instant lead-back messages",
-        invisible="enable_instant_leadback != True or leadback_enable_messaging != True",
         default=lambda self: self._default_leadback_channels(),
     )
 

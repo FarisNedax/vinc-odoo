@@ -25,10 +25,10 @@
                     <button name="action_toggle_published" type="object" class="oe_stat_button" invisible="not website_page_id">
                         <div class="o_stat_info">
                             <span class="o_stat_text text-success" invisible="not is_published">
-                                <i class="fa fa-check-circle"/> Published
+                                <i class="fa fa-check-circle" title="Published"/> Published
                             </span>
                             <span class="o_stat_text text-muted" invisible="is_published">
-                                <i class="fa fa-eye-slash"/> Unpublished
+                                <i class="fa fa-eye-slash" title="Unpublished"/> Unpublished
                             </span>
                             <span class="o_stat_value">Click to toggle</span>
                         </div>
@@ -123,10 +123,10 @@
                                          readonly="template_readonly"
                                          help="Choose the design template for your vCard website:&#10;- Classic: Traditional, clean layout with centered profile picture and organized sections&#10;- Modern: Contemporary design with inline action buttons and streamlined layout&#10;- Corporate: Professional business-focused template with structured sections&#10;- Minimal: Tabbed navigation for a compact, minimalistic experience&#10;- Creative: Playful design with floating elements and unique styling"/>
                                   <div invisible="not is_launch_plan" style="margin-top: 8px; padding: 8px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
-                                      <i class="fa fa-info-circle"/> <strong>Launch Plan:</strong> You're using the Modern template. Upgrade to Grow or Scale to access more templates.
+                                      <i class="fa fa-info-circle" title="Launch Plan"/> <strong>Launch Plan:</strong> You're using the Modern template. Upgrade to Grow or Scale to access more templates.
                                   </div>
                                   <div invisible="subscription_plan != 'grow'" style="margin-top: 8px; padding: 8px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
-                                      <i class="fa fa-info-circle"/> <strong>Grow Plan:</strong> You can use Modern, Minimal, or Creative templates. Upgrade to Scale to access Classic and Corporate templates.
+                                      <i class="fa fa-info-circle" title="Grow Plan"/> <strong>Grow Plan:</strong> You can use Modern, Minimal, or Creative templates. Upgrade to Scale to access Classic and Corporate templates.
                                   </div>
                                   <field name="website_full_url" readonly="1" string="Vinc URL"/>
                                   <button name="action_generate_website_page" string="Generate Website" type="object" class="oe_highlight"/>
@@ -178,7 +178,7 @@
            readonly="is_launch_plan"
            help="Automatically send an introduction email to new leads. The email will be sent from notifications@vinculumapp.com with you CC'd and as the Reply-To address. (Grow+ feature)"/>
     <div invisible="show_form != True or not is_launch_plan" style="margin-top: 8px; padding: 8px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
-        <i class="fa fa-lock"/> <strong>Upgrade Required:</strong> Intro emails are available on Grow and Scale plans.
+        <i class="fa fa-lock" title="Upgrade Required"/> <strong>Upgrade Required:</strong> Intro emails are available on Grow and Scale plans.
     </div>
     
 
@@ -223,7 +223,7 @@
                readonly="is_launch_plan"
                help="Show click-to-chat buttons (WhatsApp, Viber, Telegram) to new leads after form submission. (Grow+ feature)"/>
         <div invisible="show_form != True or not is_launch_plan" style="margin-top: 8px; padding: 8px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
-            <i class="fa fa-lock"/> <strong>Upgrade Required:</strong> Click to Chat is available on Grow and Scale plans.
+            <i class="fa fa-lock" title="Upgrade Required"/> <strong>Upgrade Required:</strong> Click to Chat is available on Grow and Scale plans.
         </div>
 
         <newline invisible="enable_instant_leadback != True" colspan="2"/>
@@ -414,7 +414,7 @@
                             <group col="2">
                                 <group string="QR Logo">
                                     <div invisible="not is_launch_plan" style="margin-bottom: 8px; padding: 8px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
-                                        <i class="fa fa-info-circle"/> <strong>Grow+ Feature:</strong> Custom QR logo is available on Grow and Scale plans.
+                                        <i class="fa fa-info-circle" title="Grow+ Feature"/> <strong>Grow+ Feature:</strong> Custom QR logo is available on Grow and Scale plans.
                                     </div>
                                     <field name="qr_logo" widget="image" class="oe_avatar" options="{'size': (125, 125)}" readonly="is_launch_plan"/>
                                 </group>
@@ -522,7 +522,7 @@
                                 <field name="show_services" widget="boolean_toggle" string="Show Services Section?"
                                        readonly="is_launch_plan"/>
                                 <div invisible="not is_launch_plan" style="margin-top: 8px; padding: 8px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
-                                    <i class="fa fa-lock"/> <strong>Upgrade Required:</strong> Services section is available on Grow and Scale plans.
+                                    <i class="fa fa-lock" title="Upgrade Required"/> <strong>Upgrade Required:</strong> Services section is available on Grow and Scale plans.
                                 </div>
                             </group>
                             <group string="Services You Provide" col="1" invisible="not show_services">
@@ -576,7 +576,7 @@
                                     <field name="show_reviews" widget="boolean_toggle" string="Show Reviews Section?"
                                            readonly="is_launch_plan"/>
                                     <div invisible="not is_launch_plan" style="margin-top: 8px; padding: 8px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
-                                        <i class="fa fa-lock"/> <strong>Upgrade Required:</strong> Reviews section is available on Grow and Scale plans.
+                                        <i class="fa fa-lock" title="Upgrade Required"/> <strong>Upgrade Required:</strong> Reviews section is available on Grow and Scale plans.
                                     </div>
                                     <field name="reviews_section_title" invisible="not show_reviews" string="Reviews Section Title?"
                                            readonly="is_launch_plan"/>
@@ -636,7 +636,7 @@
                                     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
                                         <div>
                                             <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #111827;">
-                                                <i class="fa fa-envelope" style="margin-right: 10px;"></i>Email Signature Generator
+                                                <i class="fa fa-envelope" title="Email Signature Generator" style="margin-right: 10px;"></i>Email Signature Generator
                                             </h2>
                                             <p style="margin: 0; color: #6b7280; font-size: 14px;">
                                                 Select a template, preview your signature, and copy it to use in your email client.
@@ -660,16 +660,16 @@
                                     <div style="background: #f8fafc; border-bottom: 1px solid #e5e7eb; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
                                         <div style="display: flex; align-items: center; gap: 12px;">
                                             <div id="sig-template-icon" style="width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                                <i class="fa fa-columns" style="color: white; font-size: 14px;"></i>
+                                                <i class="fa fa-columns" title="Template" style="color: white; font-size: 14px;"></i>
                                             </div>
                                             <span id="sig-template-name" style="font-weight: 600; font-size: 16px; color: #111827;">Modern Template</span>
                                         </div>
                                         <div style="display: flex; align-items: center; gap: 10px;">
                                             <span id="set-odoo-sig-btn" class="set-odoo-sig-btn" style="color: #4C75A3; background: #ffffff; border: 1px solid #4C75A3; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-block;" title="Set this as the Odoo email signature of the user who owns this card">
-                                                <i class="fa fa-user-plus"></i> Set as Odoo signature
+                                                <i class="fa fa-user-plus" title="Set as Odoo signature"></i> Set as Odoo signature
                                             </span>
                                             <span id="copy-sig-btn" class="copy-sig-btn" style="color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-block;">
-                                                <i class="fa fa-copy"></i> Copy Signature
+                                                <i class="fa fa-copy" title="Copy Signature"></i> Copy Signature
                                             </span>
                                         </div>
                                     </div>
@@ -682,7 +682,7 @@
 
                                 <!-- Footer note -->
                                 <div style="text-align: center; color: #9ca3af; font-size: 13px; padding: 20px 0;">
-                                    <i class="fa fa-info-circle" style="margin-right: 6px;"></i>
+                                    <i class="fa fa-info-circle" title="Signature" style="margin-right: 6px;"></i>
                                     Copy and paste into your email client's signature settings (Gmail, Outlook, Apple Mail, etc.)
                                 </div>
                             </div>
@@ -690,7 +690,7 @@
                                 <!-- Header -->
                                 <div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
                                     <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #111827;">
-                                        <i class="fa fa-video-camera" style="margin-right: 10px;"></i>Virtual Meeting Backgrounds
+                                        <i class="fa fa-video-camera" title="Virtual Meeting Backgrounds" style="margin-right: 10px;"></i>Virtual Meeting Backgrounds
                                     </h2>
                                     <p style="margin: 0; color: #6b7280; font-size: 14px;">
                                         Create professional Zoom/Teams backgrounds with your contact info and QR code.
@@ -764,7 +764,7 @@
                                                 <span style="font-size: 13px; color: #6b7280; display: block; margin-bottom: 8px;">Custom Image</span>
                                                 <div id="vbg-custom-option" class="vbg-bg-option" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 60px; border: 2px dashed #d1d5db; border-radius: 8px; cursor: pointer; transition: all 0.2s; position: relative;">
                                                     <input type="file" id="vbg-custom-input" accept="image/*" style="position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer;"/>
-                                                    <span style="color: #6b7280; font-size: 13px;"><i class="fa fa-upload" style="margin-right: 8px;"></i>Upload image</span>
+                                                    <span style="color: #6b7280; font-size: 13px;"><i class="fa fa-upload" title="Upload Image" style="margin-right: 8px;"></i>Upload image</span>
                                                 </div>
                                             </div>
 
@@ -774,24 +774,24 @@
                                                 <div id="vbg-logo-option" class="vbg-bg-option" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 60px; border: 2px dashed #d1d5db; border-radius: 8px; cursor: pointer; transition: all 0.2s; position: relative; background: #f9fafb;">
                                                     <input type="file" id="vbg-logo-input" accept="image/*" style="position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer;"/>
                                                     <span style="color: #6b7280; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-                                                        <i class="fa fa-building-o"></i> Upload Logo
+                                                        <i class="fa fa-building-o" title="Upload Logo"></i> Upload Logo
                                                     </span>
                                                 </div>
                                                 <div id="vbg-logo-preview-container" style="margin-top: 8px; display: none; align-items: center; gap: 8px; padding: 8px; background: #f3f4f6; border-radius: 6px;">
-                                                    <img id="vbg-logo-preview" style="height: 30px; width: auto; max-width: 100px; object-fit: contain;" />
+                                                    <img id="vbg-logo-preview" style="height: 30px; width: auto; max-width: 100px; object-fit: contain;" alt="Logo"/>
                                                     <span style="font-size: 12px; color: #4b5563; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">logo.png</span>
-                                                    <span id="vbg-remove-logo" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 6px; z-index: 20; position: relative;"><i class="fa fa-times"></i></span>
+                                                    <span id="vbg-remove-logo" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 6px; z-index: 20; position: relative;"><i class="fa fa-times" title="Remove Logo"></i></span>
                                                 </div>
                                             </div>
                                         </div>
                                         
                                         <!-- Download Buttons -->
                                         <div id="download-vbg-btn" style="width: 100%; padding: 14px 24px; background: linear-gradient(14deg, rgba(76, 117, 163, 1) 0%, rgba(60, 146, 232, 1) 50%, rgba(69, 126, 184, 1) 100%); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(60, 146, 232, 0.3); text-align: center; margin-bottom: 10px;">
-                                            <i class="fa fa-download"></i> Download Background (1920×1080)
+                                            <i class="fa fa-download" title="Download Background"></i> Download Background (1920×1080)
                                         </div>
                                         
                                         <div id="download-vbg-btn-nonflipped" style="width: 100%; padding: 14px 24px; background: #f3f4f6; color: #374151; border: 2px solid #d1d5db; border-radius: 8px; font-weight: 600; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center;">
-                                            <i class="fa fa-download"></i> Download Original (1920×1080)
+                                            <i class="fa fa-download" title="Download Original"></i> Download Original (1920×1080)
                                         </div>
                                         
                                         <p style="text-align: center; color: #6b7280; font-size: 11px; margin-top: 10px; line-height: 1.5;">
@@ -813,7 +813,7 @@
                                 
                                 <!-- Footer note -->
                                 <div style="text-align: center; color: #9ca3af; font-size: 13px; padding: 20px 0; margin-top: 24px; border-top: 1px solid #e5e7eb;">
-                                    <i class="fa fa-info-circle" style="margin-right: 6px;"></i>
+                                    <i class="fa fa-info-circle" title="Video Call" style="margin-right: 6px;"></i>
                                     Add to your video call app: Zoom (Settings → Virtual Background), Teams (Settings → Background effects)
                                 </div>
                             </div>
