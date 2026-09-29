@@ -13,6 +13,7 @@ import base64
 import re
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError, UserError
+from odoo.tools import is_html_empty
 from markupsafe import Markup
 from qrcode.image.styles.colormasks import SolidFillColorMask
 from qrcode.image.styledpil import StyledPilImage
@@ -2042,10 +2043,30 @@ class PartnerVCard(models.Model):
             'leads_by_stage': leads_by_stage,
             'scans_count': scans_count,
             'page_views': page_views,
+            'qr_code_programmed': bool(self.qr_code),
+            'profile_completeness': self._get_profile_completeness(),
             'period_start': period_start,
             'period_end': period_end,
         }
-    
+
+    def _get_profile_completeness(self):
+        """Profile completeness in percent, weighted as the digest email describes:
+        core info 40, contact details 20, address 15, content & branding 15, social links 10."""
+        self.ensure_one()
+        social_fields = [
+            name for name, field in self._fields.items()
+            if field.type == 'char' and name.endswith(('_url', '_url_company'))
+            and name not in ('calendly_url', 'website_full_url', 'referral_signup_url')
+        ]
+        weighted = [
+            (10, self.name), (10, self.function), (10, self.company_name), (10, self.image_url),
+            (10, self.email), (10, self.phone or self.mobile),
+            (5, self.street), (5, self.city), (5, self.country_id),
+            (5, not is_html_empty(self.about)), (5, self.banner_image), (5, self.website),
+            (10, any(self[name] for name in social_fields)),
+        ]
+        return sum(weight for weight, value in weighted if value)
+
     def _send_digest_email(self, force_send=False):
         """Send digest email to vCard owner
 
@@ -2156,7 +2177,7 @@ class PartnerVCard(models.Model):
                     <h2 style="color: #333; font-size: 20px; margin: 0 0 20px 0;">📈 Quick Stats</h2>
                     
                     <!-- Leads Section -->
-                    <div style="background: ' + (partner.primary_color or '#ffffff') + '; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="background: {self.primary_color or '#ffffff'}; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                         <h3 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">🎯 Leads Captured</h3>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                             <span style="color: #666;">New Leads:</span>
@@ -2214,7 +2235,7 @@ class PartnerVCard(models.Model):
                     </div>
 
                     <!-- Usage Section -->
-                    <div style="background: ' + (partner.primary_color or '#ffffff') + '; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="background: {self.primary_color or '#ffffff'}; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                         <h3 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">📱 Usage Stats</h3>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                             <span style="color: #666;">Page Views:</span>
@@ -2227,9 +2248,6 @@ class PartnerVCard(models.Model):
                         </div>
                         <p style="margin: 5px 0 0 0; color: #999; font-size: 11px; font-style: italic;">Total number of times your QR code has been scanned</p>
                     </div>
-
-                    <!-- Referral Stats Section -->
-                    {self._get_referral_stats_html(stats.get('referral_stats', {}))}
                 </div>
 
                 <!-- CTA Section -->
