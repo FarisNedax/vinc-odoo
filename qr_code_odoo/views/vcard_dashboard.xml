@@ -32,7 +32,7 @@
                                      t-att-title="record.name.value"
                                      t-if="record.image_url.raw_value or record.attachment_id.raw_value"/>
                                 <div t-if="!record.image_url.raw_value and !record.attachment_id.raw_value" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #6c757d;">
-                                    <i class="fa fa-user-circle" style="font-size: 64px;"/>
+                                    <i class="fa fa-user-circle" title="User" style="font-size: 64px;"/>
                                 </div>
                             </div>
                             <div class="oe_kanban_details" style="margin-left: 130px;">
@@ -92,13 +92,15 @@
                                         <a t-att-href="record.website_full_url.raw_value" 
                                            target="_blank" 
                                            class="btn btn-sm btn-primary" 
+                                           role="button"
                                            t-if="record.website_full_url.raw_value">
-                                            <i class="fa fa-globe me-1"/> View Card
+                                            <i class="fa fa-globe me-1" title="View Card"/> View Card
                                         </a>
                                         <a t-att-href="'/vcard/qr_code/download/' + record.id.raw_value" 
                                            target="_blank" 
-                                           class="btn btn-sm btn-secondary ms-2">
-                                            <i class="fa fa-qrcode me-1"/> QR Code
+                                           class="btn btn-sm btn-secondary ms-2"
+                                           role="button">
+                                            <i class="fa fa-qrcode me-1" title="QR Code"/> QR Code
                                         </a>
                                     </div>
                                 </div>

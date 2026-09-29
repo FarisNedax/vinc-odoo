@@ -23,16 +23,17 @@ class vCardWebsites(models.Model):
     full_url = fields.Char(string="Full URL", compute='_compute_full_url', store=False)
     active = fields.Boolean(string='Active', default=True, help='Archive this link to hide it from the vCard without deleting it')
     
-    @api.model
-    def create(self, vals):
+    @api.model_create_multi
+    def create(self, vals_list):
         """Set default button_color to partner's secondary_color if not provided"""
-        if 'partner_id' in vals:
-            partner = self.env['partner.vcard'].browse(vals['partner_id'])
-            # Set default button_color
-            if 'button_color' not in vals or not vals.get('button_color'):
-                if partner and partner.secondary_color:
-                    vals['button_color'] = partner.secondary_color
-        return super(vCardWebsites, self).create(vals)
+        for vals in vals_list:
+            if 'partner_id' in vals:
+                partner = self.env['partner.vcard'].browse(vals['partner_id'])
+                # Set default button_color
+                if 'button_color' not in vals or not vals.get('button_color'):
+                    if partner and partner.secondary_color:
+                        vals['button_color'] = partner.secondary_color
+        return super(vCardWebsites, self).create(vals_list)
     
     @api.depends('website_url')
     def _compute_full_url(self):

@@ -611,7 +611,7 @@
                       <div class="gs-qr-stack">
                         <img class="gs-qr-sample" id="qr_code_dummy" src="/qr_code_odoo/static/description/Vinc.png" alt="Sample QR code preview"/>
                         <div class="gs-qr-logo-overlay" id="qr_logo_overlay_container">
-                          <img id="qr_logo_image" src="" alt=""/>
+                          <img id="qr_logo_image" src="" alt="QR Logo"/>
                         </div>
                       </div>
                       <p class="gs-qr-note">Sample QR — your real one generates on publish.</p>

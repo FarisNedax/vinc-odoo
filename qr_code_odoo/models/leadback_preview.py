@@ -30,6 +30,6 @@ class LeadbackPreview(models.TransientModel):
     email_from = fields.Char(string='From', readonly=True)
     
     # Message preview fields
-    message_to = fields.Char(string='To', readonly=True)
+    message_to = fields.Char(string='Message To', readonly=True)
     channels = fields.Char(string='Channels', readonly=True)
 

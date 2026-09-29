@@ -13,7 +13,8 @@ import base64
 import re
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError, UserError
-from markupsafe import Markup
+from odoo.tools import is_html_empty
+from markupsafe import Markup, escape
 from qrcode.image.styles.colormasks import SolidFillColorMask
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers import CircleModuleDrawer, RoundedModuleDrawer, GappedSquareModuleDrawer, SquareModuleDrawer
@@ -202,8 +203,9 @@ class FollowupScheduledReminder(models.Model):
         _logger.info(f"Found {len(due_reminders)} scheduled reminder(s) due for processing (excluding those waiting for previous activities)")
         
         # Also check for reminders waiting for completed activities
-        completed_activities = self.env['mail.activity'].sudo().search([
-            ('state', '=', 'done'),
+        # state is unsearchable, active = False means done status
+        completed_activities = self.env['mail.activity'].sudo().with_context(active_test=False).search([
+            ('active', '=', False),
             ('date_done', '!=', False),
         ])
         
@@ -1350,13 +1352,11 @@ class PartnerVCard(models.Model):
         string="Enable Automated Email",
         default=True,
         help="Automatically send an email to new leads using your email marketing system",
-        invisible="enable_instant_leadback != True"
     )
     leadback_enable_messaging = fields.Boolean(
         string="Enable Click to Chat",
         default=True,
         help="Generate click-to-chat links for messaging platforms (WhatsApp, Viber, Telegram)",
-        invisible="enable_instant_leadback != True"
     )
     leadback_email_template_preset = fields.Selection(
         [
@@ -1370,19 +1370,16 @@ class PartnerVCard(models.Model):
         string="Email Template",
         default='friendly',
         help="Choose a pre-built email template or create your own",
-        invisible="enable_instant_leadback != True or leadback_send_email != True"
     )
     leadback_email_subject = fields.Char(
         string="Subject",
         default="Great connecting with you",
         help="Subject line for the automated welcome email",
-        invisible="enable_instant_leadback != True or leadback_send_email != True"
     )
     leadback_email_template = fields.Html(
         string="Email Body",
         default="<p>Hi {contact_name},</p><p>Thanks again for sharing your contact details. Just wanted to let you know I received your message.</p>{if booking_url}<p>If you'd like to continue our conversation or set up some time, you can book a slot here:</p><p><a href='{booking_url}'>{booking_url}</a></p>{/if}<p>Talk soon,<br/>{owner_name}</p>",
         help="HTML email template. Use placeholders like {contact_name}, {first_name}, {vcard_url}, {booking_url}, {owner_name}. Use {placeholder|fallback} for fallback values. Use {if field}...{/if} for conditional blocks.",
-        invisible="enable_instant_leadback != True or leadback_send_email != True or leadback_email_template_preset != 'custom'"
     )
     leadback_email_delay_preset = fields.Selection(
         [
@@ -1396,20 +1393,17 @@ class PartnerVCard(models.Model):
         string="Email Delay Preset",
         default='immediate',
         help="Quick preset for email delay, or choose Custom to set manually",
-        invisible="enable_instant_leadback != True or leadback_send_email != True"
     )
     leadback_email_delay_type = fields.Selection(
         [('minutes', 'Minutes'), ('hours', 'Hours'), ('days', 'Days')],
         string="Email Send Delay Type",
         default='minutes',
         help="Delay type for sending automated email (only used when Custom preset is selected)",
-        invisible="enable_instant_leadback != True or leadback_send_email != True or leadback_email_delay_preset != 'custom'"
     )
     leadback_email_delay = fields.Integer(
         string="Email Delay",
         default=0,
         help="How long to wait before sending the email (only used when Custom preset is selected)",
-        invisible="enable_instant_leadback != True or leadback_send_email != True or leadback_email_delay_preset != 'custom'"
     )
     leadback_message_template_preset = fields.Selection(
         [
@@ -1422,13 +1416,11 @@ class PartnerVCard(models.Model):
         string="Message Template",
         default='friendly',
         help="Choose a pre-built message template or create your own",
-        invisible="enable_instant_leadback != True or leadback_enable_messaging != True"
     )
     leadback_message_template = fields.Text(
         string="Message Body",
         default="Hi {contact_name}! Thanks for sharing your details — I got your message.\n\n{if booking_url}If you'd like to continue the conversation or set up a time, here's my booking link:\n{booking_url}{/if}",
         help="Template for messaging links (WhatsApp/Viber/Telegram). Use placeholders like {contact_name}, {first_name}, {vcard_url}, {booking_url}, {owner_name}. Use {placeholder|fallback} for fallback values. Use {if field}...{/if} for conditional blocks.",
-        invisible="enable_instant_leadback != True or leadback_enable_messaging != True or leadback_message_template_preset != 'custom'"
     )
     leadback_message_delay_preset = fields.Selection(
         [
@@ -1442,20 +1434,17 @@ class PartnerVCard(models.Model):
         string="Message Delay Preset",
         default='immediate',
         help="Quick preset for message delay, or choose Custom to set manually",
-        invisible="enable_instant_leadback != True or leadback_enable_messaging != True"
     )
     leadback_message_delay_type = fields.Selection(
         [('minutes', 'Minutes'), ('hours', 'Hours'), ('days', 'Days')],
         string="Message Send Delay Type",
         default='minutes',
         help="Delay type for generating messaging links (only used when Custom preset is selected)",
-        invisible="enable_instant_leadback != True or leadback_enable_messaging != True or leadback_message_delay_preset != 'custom'"
     )
     leadback_message_delay = fields.Integer(
         string="Message Delay",
         default=0,
         help="How long to wait before generating messaging links (only used when Custom preset is selected)",
-        invisible="enable_instant_leadback != True or leadback_enable_messaging != True or leadback_message_delay_preset != 'custom'"
     )
     leadback_channels = fields.Many2many(
         'leadback.messaging.channel',
@@ -1464,7 +1453,6 @@ class PartnerVCard(models.Model):
         'channel_id',
         string="Messaging Channels",
         help="Select one or more messaging channels to send instant lead-back messages",
-        invisible="enable_instant_leadback != True or leadback_enable_messaging != True",
         default=lambda self: self._default_leadback_channels(),
     )
 
@@ -2055,10 +2043,30 @@ class PartnerVCard(models.Model):
             'leads_by_stage': leads_by_stage,
             'scans_count': scans_count,
             'page_views': page_views,
+            'qr_code_programmed': bool(self.qr_code),
+            'profile_completeness': self._get_profile_completeness(),
             'period_start': period_start,
             'period_end': period_end,
         }
-    
+
+    def _get_profile_completeness(self):
+        """Profile completeness in percent, weighted as the digest email describes:
+        core info 40, contact details 20, address 15, content & branding 15, social links 10."""
+        self.ensure_one()
+        social_fields = [
+            name for name, field in self._fields.items()
+            if field.type == 'char' and name.endswith(('_url', '_url_company'))
+            and name not in ('calendly_url', 'website_full_url', 'referral_signup_url')
+        ]
+        weighted = [
+            (10, self.name), (10, self.function), (10, self.company_name), (10, self.image_url),
+            (10, self.email), (10, self.phone or self.mobile),
+            (5, self.street), (5, self.city), (5, self.country_id),
+            (5, not is_html_empty(self.about)), (5, self.banner_image), (5, self.website),
+            (10, any(self[name] for name in social_fields)),
+        ]
+        return sum(weight for weight, value in weighted if value)
+
     def _send_digest_email(self, force_send=False):
         """Send digest email to vCard owner
 
@@ -2123,7 +2131,7 @@ class PartnerVCard(models.Model):
                 followups_list = ""
                 for followup in stats['due_followups'][:5]:
                     overdue_text = " <span style='color: #dc3545;'>(Overdue)</span>" if followup.get('overdue') else ""
-                    followups_list += f"<li style='margin-bottom: 5px;'><strong>{followup.get('lead_name', 'Lead')}</strong> - {followup.get('activity_summary', 'Follow-up')}{overdue_text}</li>"
+                    followups_list += f"<li style='margin-bottom: 5px;'><strong>{escape(followup.get('lead_name') or 'Lead')}</strong> - {escape(followup.get('activity_summary') or 'Follow-up')}{overdue_text}</li>"
                 
                 if len(stats['due_followups']) > 5:
                     followups_list += f"<p style='margin: 10px 0 0 0; color: #666; font-size: 12px;'>... and {len(stats['due_followups']) - 5} more</p>"
@@ -2141,7 +2149,7 @@ class PartnerVCard(models.Model):
             if stats.get('leads_by_stage'):
                 stage_items = []
                 for stage_name, count in sorted(stats['leads_by_stage'].items()):
-                    stage_items.append(f"<div style='display: flex; justify-content: space-between; margin-bottom: 8px;'><span style='color: #666;'>{stage_name}:</span><strong style='color: #333; font-size: 16px;'>{count}</strong></div>")
+                    stage_items.append(f"<div style='display: flex; justify-content: space-between; margin-bottom: 8px;'><span style='color: #666;'>{escape(stage_name)}:</span><strong style='color: #333; font-size: 16px;'>{count}</strong></div>")
                 leads_by_stage_html = "".join(stage_items)
             else:
                 leads_by_stage_html = "<p style='color: #999; font-size: 12px; margin: 0;'>No leads yet</p>"
@@ -2169,7 +2177,7 @@ class PartnerVCard(models.Model):
                     <h2 style="color: #333; font-size: 20px; margin: 0 0 20px 0;">📈 Quick Stats</h2>
                     
                     <!-- Leads Section -->
-                    <div style="background: ' + (partner.primary_color or '#ffffff') + '; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="background: {self.primary_color or '#ffffff'}; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                         <h3 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">🎯 Leads Captured</h3>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                             <span style="color: #666;">New Leads:</span>
@@ -2227,7 +2235,7 @@ class PartnerVCard(models.Model):
                     </div>
 
                     <!-- Usage Section -->
-                    <div style="background: ' + (partner.primary_color or '#ffffff') + '; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="background: {self.primary_color or '#ffffff'}; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                         <h3 style="color: #333; font-size: 18px; margin: 0 0 15px 0;">📱 Usage Stats</h3>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                             <span style="color: #666;">Page Views:</span>
@@ -2240,9 +2248,6 @@ class PartnerVCard(models.Model):
                         </div>
                         <p style="margin: 5px 0 0 0; color: #999; font-size: 11px; font-style: italic;">Total number of times your QR code has been scanned</p>
                     </div>
-
-                    <!-- Referral Stats Section -->
-                    {self._get_referral_stats_html(stats.get('referral_stats', {}))}
                 </div>
 
                 <!-- CTA Section -->
