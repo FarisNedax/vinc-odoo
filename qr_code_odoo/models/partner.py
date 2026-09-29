@@ -14,7 +14,7 @@ import re
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError, UserError
 from odoo.tools import is_html_empty
-from markupsafe import Markup
+from markupsafe import Markup, escape
 from qrcode.image.styles.colormasks import SolidFillColorMask
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers import CircleModuleDrawer, RoundedModuleDrawer, GappedSquareModuleDrawer, SquareModuleDrawer
@@ -2131,7 +2131,7 @@ class PartnerVCard(models.Model):
                 followups_list = ""
                 for followup in stats['due_followups'][:5]:
                     overdue_text = " <span style='color: #dc3545;'>(Overdue)</span>" if followup.get('overdue') else ""
-                    followups_list += f"<li style='margin-bottom: 5px;'><strong>{followup.get('lead_name', 'Lead')}</strong> - {followup.get('activity_summary', 'Follow-up')}{overdue_text}</li>"
+                    followups_list += f"<li style='margin-bottom: 5px;'><strong>{escape(followup.get('lead_name') or 'Lead')}</strong> - {escape(followup.get('activity_summary') or 'Follow-up')}{overdue_text}</li>"
                 
                 if len(stats['due_followups']) > 5:
                     followups_list += f"<p style='margin: 10px 0 0 0; color: #666; font-size: 12px;'>... and {len(stats['due_followups']) - 5} more</p>"
@@ -2149,7 +2149,7 @@ class PartnerVCard(models.Model):
             if stats.get('leads_by_stage'):
                 stage_items = []
                 for stage_name, count in sorted(stats['leads_by_stage'].items()):
-                    stage_items.append(f"<div style='display: flex; justify-content: space-between; margin-bottom: 8px;'><span style='color: #666;'>{stage_name}:</span><strong style='color: #333; font-size: 16px;'>{count}</strong></div>")
+                    stage_items.append(f"<div style='display: flex; justify-content: space-between; margin-bottom: 8px;'><span style='color: #666;'>{escape(stage_name)}:</span><strong style='color: #333; font-size: 16px;'>{count}</strong></div>")
                 leads_by_stage_html = "".join(stage_items)
             else:
                 leads_by_stage_html = "<p style='color: #999; font-size: 12px; margin: 0;'>No leads yet</p>"
