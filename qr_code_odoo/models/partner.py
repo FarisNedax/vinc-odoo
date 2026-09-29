@@ -202,8 +202,9 @@ class FollowupScheduledReminder(models.Model):
         _logger.info(f"Found {len(due_reminders)} scheduled reminder(s) due for processing (excluding those waiting for previous activities)")
         
         # Also check for reminders waiting for completed activities
-        completed_activities = self.env['mail.activity'].sudo().search([
-            ('state', '=', 'done'),
+        # state is unsearchable, active = False means done status
+        completed_activities = self.env['mail.activity'].sudo().with_context(active_test=False).search([
+            ('active', '=', False),
             ('date_done', '!=', False),
         ])
         
