@@ -19,7 +19,7 @@ class BulkOnboardingController(http.Controller):
         # Check if user is admin or has ERP manager group
         if user.id == 1:  # Superuser
             return True
-        if user.has_group('base.group_system') or user.has_group('base.group_erp_manager'):
+        if user.has_group('qr_code_odoo.group_vinc_manager') or user.has_group('base.group_erp_manager'):
             return True
         return False
 

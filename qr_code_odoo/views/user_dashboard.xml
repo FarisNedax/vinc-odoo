@@ -37,7 +37,7 @@
                                         <i class="fa fa-plus" title="Create new card"/> Create new card
                                     </button>
                                     <button name="action_view_bulk_onboarding" type="object" class="vg-hero-btn is-ghost"
-                                            groups="base.group_system,base.group_erp_manager">
+                                            groups="qr_code_odoo.group_vinc_manager,base.group_erp_manager">
                                         <i class="fa fa-users" title="Bulk onboarding"/> Bulk onboarding
                                     </button>
                                 </div>
