@@ -681,6 +681,15 @@ class CrmLead(models.Model):
             lead_domain.insert(0, ('id', '!=', real_self_id))
         lead_pool = Lead.search(lead_domain, limit=2000)
 
+        # One grouped query for every partner's top deal, not one per partner.
+        top_revenue = {
+            partner.id: revenue
+            for partner, revenue in Lead._read_group(
+                [('partner_id', 'in', partner_pool.ids)],
+                ['partner_id'], ['expected_revenue:max'],
+            )
+        }
+
         lead_industry = self.partner_id.industry_id if self.partner_id else False
         lead_country = self.country_id
         lead_state = self.state_id
@@ -734,7 +743,7 @@ class CrmLead(models.Model):
 
             rec_revenue = (
                 record.expected_revenue if is_lead
-                else self._lookalike_partner_top_revenue(record)
+                else top_revenue.get(record.id, 0)
             )
             rec_bucket = self._lookalike_deal_bucket(rec_revenue or 0)
             if lead_size_bucket and rec_bucket:
@@ -776,28 +785,27 @@ class CrmLead(models.Model):
 
             return score, signals
 
+        # Payloads cost queries, so build them only for the top N shown.
         scored_partners = []
         for p in partner_pool:
             score, signals = score_record(p, 'category_id', is_lead=False)
             if score >= self._LOOKALIKE_MIN_SCORE:
-                payload = self._lookalike_partner_payload(p)
-                scored_partners.append((score, p, signals, payload))
+                scored_partners.append((score, p, signals))
         scored_partners.sort(key=lambda x: -x[0])
         partner_matches = [
-            (p, signals, payload)
-            for _, p, signals, payload in scored_partners[:self._LOOKALIKE_TOP_N]
+            (p, signals, self._lookalike_partner_payload(p))
+            for _, p, signals in scored_partners[:self._LOOKALIKE_TOP_N]
         ]
 
         scored_leads = []
         for l in lead_pool:
             score, signals = score_record(l, 'tag_ids', is_lead=True)
             if score >= self._LOOKALIKE_MIN_SCORE:
-                payload = self._lookalike_lead_payload(l)
-                scored_leads.append((score, l, signals, payload))
+                scored_leads.append((score, l, signals))
         scored_leads.sort(key=lambda x: -x[0])
         lead_matches = [
-            (l, signals, payload)
-            for _, l, signals, payload in scored_leads[:self._LOOKALIKE_TOP_N]
+            (l, signals, self._lookalike_lead_payload(l))
+            for _, l, signals in scored_leads[:self._LOOKALIKE_TOP_N]
         ]
 
         if partner_matches or lead_matches:
@@ -876,17 +884,6 @@ class CrmLead(models.Model):
             'owner': lead.user_id.name if lead.user_id else None,
             'last_seen': lead.write_date,
         }
-
-    @api.model
-    def _lookalike_partner_top_revenue(self, partner):
-        Lead = self.env['crm.lead'].sudo()
-        rec = Lead.search_read(
-            [('partner_id', '=', partner.id)],
-            ['expected_revenue'],
-            order='expected_revenue desc',
-            limit=1,
-        )
-        return rec[0]['expected_revenue'] if rec else 0
 
     @classmethod
     def _lookalike_deal_bucket(cls, amount):
