@@ -58,7 +58,7 @@
                                 <div class="card border-0 shadow-lg">
                                     <div class="card-body p-5">
                                         <h3 class="text-center mb-4">About Me</h3>
-                                        <div t-raw="partner.about"/>
+                                        <div t-out="partner.about"/>
                                     </div>
                                 </div>
                             </div>
@@ -275,7 +275,7 @@
                                 
                                 <!-- About Section -->
                                 <div t-if="partner.about" class="mb-4">
-                                    <p class="text-white-75" t-raw="partner.about"/>
+                                    <p class="text-white-75" t-out="partner.about"/>
                                 </div>
                                 
                                 <!-- QR Code -->

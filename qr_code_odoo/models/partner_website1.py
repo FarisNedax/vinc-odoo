@@ -714,7 +714,7 @@ class PartnerWebsite(models.Model):
                     <div t-if="partner.about" style="margin-top: 12px; margin-bottom: 24px; display: inline-block;">
                         <div t-att-style="'background: ' + (partner.secondary_color or '#dbeafe') + '20; padding: 8px 16px; border-radius: 8px; border: 1px solid ' + (partner.secondary_color or '#bfdbfe') + '80; max-width: 600px; margin: 0 auto;'">
                             <p t-att-style="'color: ' + (partner.secondary_color or '#1e40af') + '; font-size: 0.875rem; font-weight: 500; line-height: 1.5; margin: 0;'">
-                                <t t-raw="partner.about"/>
+                                <t t-out="partner.about"/>
                             </p>
                         </div>
                     </div>
@@ -1454,7 +1454,7 @@ class PartnerWebsite(models.Model):
                                             <t t-esc="review.stars_display"/>
                                         </div>
                                         <div class="review-text" t-att-style="'color: ' + (partner.secondary_color or '#000') + '; font-style: italic; line-height: 1.8; font-size: 18px; margin-bottom: 20px; word-wrap: break-word; overflow-wrap: break-word; hyphens: auto; word-break: break-word;'">
-                                            <t t-raw="review.review_text"/>
+                                            <t t-out="review.review_text"/>
                                         </div>
                                         <div class="reviewer-info">
                                             <h5 t-att-style="'color: ' + (partner.secondary_color or '#000') + '; margin: 0; font-weight: bold; font-size: 16px;'">
@@ -2544,7 +2544,7 @@ class PartnerWebsite(models.Model):
                     <h4 t-att-style="'color: ' + (partner.secondary_color or '#000') + '; margin-bottom: 16px; text-align: left;'">About</h4>
                     <div t-if="partner.about" style="text-align: left; margin-bottom: 0;">
                         <p t-att-style="'color: #64748b; line-height: 1.6; margin: 0;'">
-                            <t t-raw="partner.about"/>
+                            <t t-out="partner.about"/>
                         </p>
                     </div>
                     <div t-if="not partner.about and partner.function" style="text-align: left; margin-bottom: 0;">
@@ -2997,7 +2997,7 @@ class PartnerWebsite(models.Model):
                                                         <t t-esc="review.stars_display"/>
                                                     </div>
                                                     <div class="review-text" t-att-style="'color: #495057; font-style: italic; line-height: 1.6; font-size: 16px; margin-bottom: 16px; word-wrap: break-word;'">
-                                                        <t t-raw="review.review_text"/>
+                                                        <t t-out="review.review_text"/>
                                                     </div>
                                                     <div class="reviewer-info">
                                                         <h5 t-att-style="'color: ' + (partner.secondary_color or '#000') + '; margin: 0; font-weight: 600; font-size: 14px;'">
@@ -4209,7 +4209,7 @@ class PartnerWebsite(models.Model):
                             <!-- About Tab -->
                             <div class="minimal-tab-content" data-content="about" t-att-style="'display: none; padding: 24px 16px; background-color: ' + (partner.primary_color or '#ffffff') + ';'">
                                 <div t-if="partner.about" style="text-align: left; color: #374151; line-height: 1.6; font-size: 0.875rem;">
-                                    <t t-raw="partner.about"/>
+                                    <t t-out="partner.about"/>
                                 </div>
                                 <div t-if="not partner.about and partner.function" style="text-align: left; color: #374151; line-height: 1.6; font-size: 0.875rem;">
                                     <t t-esc="partner.function"/>
@@ -4827,7 +4827,7 @@ class PartnerWebsite(models.Model):
                     <h4 t-att-style="'color: ' + (partner.secondary_color or '#000') + '; margin-bottom: 16px; text-align: left; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em;'">About</h4>
                     <div t-if="partner.about" style="text-align: left; margin-bottom: 0;">
                         <p t-att-style="'color: #64748b; line-height: 1.6; margin: 0;'">
-                            <t t-raw="partner.about"/>
+                            <t t-out="partner.about"/>
                         </p>
                     </div>
                     <div t-if="not partner.about and partner.function" style="text-align: left; margin-bottom: 0;">
@@ -5163,7 +5163,7 @@ class PartnerWebsite(models.Model):
                                                         <t t-esc="review.stars_display"/>
                                                     </div>
                                                     <div class="review-text" t-att-style="'color: #495057; font-style: italic; line-height: 1.6; font-size: 16px; margin-bottom: 16px; word-wrap: break-word;'">
-                                                        <t t-raw="review.review_text"/>
+                                                        <t t-out="review.review_text"/>
                                                     </div>
                                                     <div class="reviewer-info">
                                                         <h5 t-att-style="'color: ' + (partner.secondary_color or '#000') + '; margin: 0; font-weight: 600; font-size: 14px;'">
@@ -6103,7 +6103,7 @@ class PartnerWebsite(models.Model):
                             <!-- About Text -->
                             <div t-if="partner.about" style="margin-bottom: 20px; text-align: left;">
                                 <p style="margin: 0; color: #374151; font-size: 0.9375rem; line-height: 1.6;">
-                                    <t t-raw="partner.about"/>
+                                    <t t-out="partner.about"/>
                                 </p>
                             </div>
                             <div t-if="not partner.about and partner.function" style="margin-bottom: 20px; text-align: left;">

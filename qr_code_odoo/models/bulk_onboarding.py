@@ -466,40 +466,6 @@ class BulkOnboardingBatch(models.Model):
         
         return token
     
-    def _get_default_groups(self):
-        """Get default groups for new rep users"""
-        groups = [self.env.ref('base.group_user').id]
-        
-        # Sales group
-        sales_group = self.env['res.groups'].sudo().search([
-            ('name', '=', 'User: Own Documents Only'),
-            ('category_id.name', '=', 'Sales')
-        ], limit=1)
-        if sales_group:
-            groups.append(sales_group.id)
-        
-        # Website groups
-        website_editor = self.env['res.groups'].sudo().search([
-            ('name', '=', 'Editor and Designer'),
-            ('category_id.name', '=', 'Website')
-        ], limit=1)
-        if website_editor:
-            groups.append(website_editor.id)
-        
-        website_restricted = self.env['res.groups'].sudo().search([
-            ('name', '=', 'Restricted Editor'),
-            ('category_id.name', '=', 'Website')
-        ], limit=1)
-        if website_restricted:
-            groups.append(website_restricted.id)
-        
-        # Email marketing group
-        email_marketing = self.env.ref('mass_mailing.group_mass_mailing_user', raise_if_not_found=False)
-        if email_marketing:
-            groups.append(email_marketing.id)
-        
-        return groups
-    
     def _prepare_vcard_vals(self, common_data, rep_data, user):
         """Prepare vCard values from common and rep data"""
         
@@ -1034,9 +1000,7 @@ class BulkOnboardingToken(models.Model):
     used_at = fields.Datetime(string='Used At')
     user_id = fields.Many2one('res.users', string='User')
 
-    _sql_constraints = [
-        ('token_unique', 'unique(token)', 'Token must be unique.')
-    ]
+    _token_unique = models.Constraint('unique(token)', 'Token must be unique.')
 
     @api.model
     def validate_token(self, token):

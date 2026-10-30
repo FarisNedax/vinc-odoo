@@ -45,7 +45,7 @@
                 <!-- Main content area without header and footer -->
                 <div class="o_wrap">
                     <div class="o_wrap_content">
-                        <t t-raw="0"/>
+                        <t t-out="0"/>
                     </div>
                 </div>
             </body>

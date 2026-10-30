@@ -9,7 +9,6 @@
         <field name="interval_number">1</field>
         <field name="interval_type">minutes</field>
         <field name="active" eval="True"/>
-        <field name="numbercall">-1</field>
     </record>
 
     <!-- Scheduled action to send digest emails -->
@@ -21,7 +20,6 @@
         <field name="interval_number">1</field>
         <field name="interval_type">hours</field>
         <field name="active">True</field>
-        <field name="numbercall">-1</field>
     </record>
 
 
@@ -34,7 +32,6 @@
         <field name="interval_number">1</field>
         <field name="interval_type">minutes</field>
         <field name="active" eval="True"/>
-        <field name="numbercall">-1</field>
     </record>
 
     <!-- Scheduled action to process bulk onboarding batches -->
@@ -46,7 +43,6 @@
         <field name="interval_number">1</field>
         <field name="interval_type">minutes</field>
         <field name="active" eval="True"/>
-        <field name="numbercall">-1</field>
     </record>
 
     <!-- Enrich leads / downloads with IP-based geolocation asynchronously.
@@ -62,7 +58,6 @@
         <field name="interval_number">5</field>
         <field name="interval_type">minutes</field>
         <field name="active" eval="True"/>
-        <field name="numbercall">-1</field>
     </record>
 
 </odoo>

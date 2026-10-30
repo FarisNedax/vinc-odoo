@@ -104,14 +104,14 @@
                         <div style="font-family: 'DM Sans', sans-serif; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--vg-ink-faint); font-weight: 500; margin: 4px 0 10px;">Recent Downloads</div>
                         <div class="vg-scroll-max">
                             <field name="download_tracking_ids" nolabel="1" readonly="1">
-                                <tree limit="20" decoration-muted="download_country == False" decoration-info="download_utm_source != False">
+                                <list limit="20" decoration-muted="download_country == False" decoration-info="download_utm_source != False">
                                     <field name="download_date" widget="datetime"/>
                                     <field name="download_country" string="Country"/>
                                     <field name="download_city" string="City"/>
                                     <field name="download_device_type" string="Device"/>
                                     <field name="download_browser" string="Browser"/>
                                     <field name="download_utm_source" string="UTM Source"/>
-                                </tree>
+                                </list>
                             </field>
                         </div>
                     </section>

@@ -135,14 +135,14 @@ All templates feature:
 
 ### Prerequisites
 
-- **Odoo 17.0** or later
+- **Odoo 19.0**
 - **Python 3.10** or later
 - **PostgreSQL** database
 - Required Python packages (see `requirements.txt`)
 
 ### Installation
 
-> **📝 Note:** This module requires an existing Odoo 17.0+ installation. If you don't have Odoo yet, you can either install it yourself or consider our [SaaS version](https://vinculumapp.com) for instant access without setup.
+> **📝 Note:** This module requires an existing Odoo 19.0 installation. If you don't have Odoo yet, you can either install it yourself or consider our [SaaS version](https://vinculumapp.com) for instant access without setup.
 
 1. **Install Python dependencies**:
    ```bash
@@ -614,7 +614,7 @@ Supported platforms include:
 ### Common Issues
 
 #### Module Won't Install
-- **Solution**: Ensure Odoo 17.0+ is installed
+- **Solution**: Ensure Odoo 19.0 is installed
 - **Check**: Python version (3.10+ required)
 - **Verify**: All dependencies installed (`pip install -r requirements.txt`)
 
@@ -696,7 +696,7 @@ For technical support on this module:
 ## 🙏 Acknowledgments
 
 Built with:
-- **Odoo 17** - Enterprise resource planning platform
+- **Odoo 19** - Enterprise resource planning platform
 - **Bootstrap 4** - Frontend framework
 - **QRCode** - QR code generation library
 - **Pillow** - Image processing library

@@ -588,7 +588,7 @@ class BulkOnboardingController(http.Controller):
             'show_started_message': show_started_message,
         })
     
-    @http.route('/bulk-onboard/resend-invite/<int:rep_id>', type='json', auth='user', website=True, csrf=False, methods=['POST'])
+    @http.route('/bulk-onboard/resend-invite/<int:rep_id>', type='jsonrpc', auth='user', website=True, csrf=False, methods=['POST'])
     def resend_invite(self, rep_id, **kwargs):
         """Resend invitation email for a specific rep"""
         try:
@@ -606,7 +606,7 @@ class BulkOnboardingController(http.Controller):
             _logger.error(f"Error resending invitation for rep {rep_id}: {str(e)}", exc_info=True)
             return {'success': False, 'error': str(e)}
     
-    @http.route('/bulk-onboard/bulk-resend-invite', type='json', auth='user', website=True, csrf=False, methods=['POST'])
+    @http.route('/bulk-onboard/bulk-resend-invite', type='jsonrpc', auth='user', website=True, csrf=False, methods=['POST'])
     def bulk_resend_invite(self, **kwargs):
         """Resend invitation emails for multiple reps"""
         if not self._check_admin_access():
@@ -674,7 +674,7 @@ class BulkOnboardingController(http.Controller):
 
         threading.Thread(target=_run, daemon=True).start()
 
-    @http.route('/bulk-onboard/rep/<int:rep_id>/update', type='json', auth='user', website=True, csrf=False, methods=['POST'])
+    @http.route('/bulk-onboard/rep/<int:rep_id>/update', type='jsonrpc', auth='user', website=True, csrf=False, methods=['POST'])
     def update_rep(self, rep_id, **kwargs):
         """Inline-edit a rep's name / email (e.g. fix a typo'd address), reset
         it to pending and clear the prior error so it can be retried."""
@@ -709,7 +709,7 @@ class BulkOnboardingController(http.Controller):
         rep.batch_id._refresh_status()
         return {'success': True, 'name': rep.name, 'email': rep.email, 'status': rep.status}
 
-    @http.route('/bulk-onboard/rep/<int:rep_id>/delete', type='json', auth='user', website=True, csrf=False, methods=['POST'])
+    @http.route('/bulk-onboard/rep/<int:rep_id>/delete', type='jsonrpc', auth='user', website=True, csrf=False, methods=['POST'])
     def delete_rep(self, rep_id, **kwargs):
         """Remove a rep row from a batch."""
         if not self._check_admin_access():
@@ -722,7 +722,7 @@ class BulkOnboardingController(http.Controller):
         batch._refresh_status()
         return {'success': True}
 
-    @http.route('/bulk-onboard/rep/<int:rep_id>/reprocess', type='json', auth='user', website=True, csrf=False, methods=['POST'])
+    @http.route('/bulk-onboard/rep/<int:rep_id>/reprocess', type='jsonrpc', auth='user', website=True, csrf=False, methods=['POST'])
     def reprocess_rep(self, rep_id, **kwargs):
         """Actually (re)create the user-linked card for a failed/pending rep —
         not just resend. Degrades to a resend if already provisioned."""
@@ -733,7 +733,7 @@ class BulkOnboardingController(http.Controller):
             return {'success': False, 'error': 'Rep not found'}
         return rep.action_reprocess()
 
-    @http.route('/bulk-onboard/batch/<int:batch_id>/add-rep', type='json', auth='user', website=True, csrf=False, methods=['POST'])
+    @http.route('/bulk-onboard/batch/<int:batch_id>/add-rep', type='jsonrpc', auth='user', website=True, csrf=False, methods=['POST'])
     def add_rep(self, batch_id, **kwargs):
         """Add a single rep to an existing batch (resurrects an empty draft)."""
         if not self._check_admin_access():
@@ -762,7 +762,7 @@ class BulkOnboardingController(http.Controller):
         rep.set_rep_data(rep_data)
         return {'success': True, 'rep_id': rep.id}
 
-    @http.route('/bulk-onboard/batch/<int:batch_id>/process', type='json', auth='user', website=True, csrf=False, methods=['POST'])
+    @http.route('/bulk-onboard/batch/<int:batch_id>/process', type='jsonrpc', auth='user', website=True, csrf=False, methods=['POST'])
     def process_batch(self, batch_id, **kwargs):
         """Process / resume a batch that still has pending reps (draft, or a
         partial/failed batch with rows that never ran)."""

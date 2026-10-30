@@ -4,16 +4,16 @@
     <record id="view_partner_reviews_list" model="ir.ui.view">
         <field name="name">partner.vcard.reviews.list</field>
         <field name="model">partner.vcard.reviews</field>
-        <field name="type">tree</field>
+        <field name="type">list</field>
         <field name="arch" type="xml">
-            <tree string="Reviews">
+            <list string="Reviews">
                 <field name="sequence" widget="handle"/>
                 <field name="reviewer_name"/>
                 <field name="rating"/>
                 <field name="review_text" widget="text" options="{'no_marker': True}"/>
                 <field name="is_published" widget="boolean_toggle"/>
                 <field name="partner_id" optional="hide"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -73,7 +73,7 @@
                 <filter string="3 Stars" name="three_stars" domain="[('rating', '=', '3')]"/>
                 <filter string="2 Stars" name="two_stars" domain="[('rating', '=', '2')]"/>
                 <filter string="1 Star" name="one_star" domain="[('rating', '=', '1')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter string="Partner" name="group_partner" context="{'group_by': 'partner_id'}"/>
                     <filter string="Rating" name="group_rating" context="{'group_by': 'rating'}"/>
                     <filter string="Published" name="group_published" context="{'group_by': 'is_published'}"/>
@@ -86,7 +86,7 @@
     <record id="action_partner_reviews" model="ir.actions.act_window">
         <field name="name">Reviews</field>
         <field name="res_model">partner.vcard.reviews</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_partner_reviews_search"/>
         <field name="context">{'search_default_published': 1}</field>
         <field name="help" type="html">

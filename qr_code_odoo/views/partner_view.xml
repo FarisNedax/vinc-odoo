@@ -324,12 +324,12 @@
                         <!-- Website Links -->
                             <group string="External Website Links" >
                                 <field name="website_ids">
-                                    <tree>
+                                    <list>
                                         <field name="active" widget="boolean_toggle"/>
                                         <field name="name" string="Button Label"/>
                                         <field name="website_url"/>
                                             <field name="button_color" widget="color" placeholder="Defaults to Secondary Color"/>
-                                    </tree>
+                                    </list>
                                     <form>
                                         <group>
                                             <field name="name" string="Button Label" placeholder="e.g., Vinc, Nedax, Resume" help="Label text for the button. If a logo is uploaded, the logo will be shown instead."/>
@@ -343,11 +343,11 @@
                             <group string="Videos">
                            
                                 <field name="video_ids">
-                                    <tree>
+                                    <list>
                                         <field name="active" widget="boolean_toggle"/>
                                         <field name="name" optional="hide" invisible="1"/>
                                         <field name="video_url"/>
-                                    </tree>
+                                    </list>
                                     <form>
                                         <group>
                                             <field name="video_url"/>
@@ -438,7 +438,7 @@
                                    invisible="followup_reminders_enabled != True"
                                    nolabel="1"
                                    context="{'default_partner_vcard_id': id, 'default_user_id': uid}">
-                                <tree editable="bottom" string="Follow-up Reminders">
+                                <list editable="bottom" string="Follow-up Reminders">
                                     <field name="sequence" widget="handle"/>
                                     <field name="name" required="1"/>
                                     <field name="schedule_type"/>
@@ -448,7 +448,7 @@
                                     <field name="delay_amount" required="1"/>
                                     <field name="delay_type" required="1"/>
                                     <field name="user_id" domain="[('id', '=', uid)]" options="{'no_open': True}"/>
-                                </tree>
+                                </list>
                                 <form string="Follow-up Reminder">
                                     <sheet>
                                         <group>
@@ -513,9 +513,9 @@
                         <page string="Content">
                             <group string="Specialities" col="1">
                                 <field name="speciality_ids" nolabel="1">
-                                    <tree editable="bottom">
+                                    <list editable="bottom">
                                         <field name="name" required="1"/>
-                                    </tree>
+                                    </list>
                                 </field>
                             </group>
                             <group string="Services Settings" col="2">
@@ -529,7 +529,7 @@
                                 <!-- Remove inline editing so clicking a row opens the Service form dialog
                                      (which contains the "Request Form Questions" tab). -->
                                 <field name="service_ids" nolabel="1">
-                                    <tree string="Services">
+                                    <list string="Services">
                                         <field name="active" widget="boolean_toggle"/>
                                         <field name="sequence" widget="handle"/>
                                         <field name="name" required="1" string="Service Title"/>
@@ -537,7 +537,7 @@
                                         <field name="price" string="Pricing"/>
                                         <field name="show_pricing" string="Show Pricing" widget="boolean_toggle"/>
                                         <field name="thank_you_message" string="Thank You Message" placeholder="Thank you! Your service request has been sent. We'll be in touch shortly."/>
-                                    </tree>
+                                    </list>
                                     <form string="Service">
                                         <sheet>
                                             <group col="2">
@@ -555,7 +555,7 @@
                                             <notebook>
                                                 <page string="Request Form Questions">
                                                     <field name="question_ids">
-                                                        <tree editable="bottom">
+                                                        <list editable="bottom">
                                                             <field name="sequence" widget="handle"/>
                                                             <field name="name"/>
                                                             <field name="field_type"/>
@@ -563,7 +563,7 @@
                                                             <!-- In Odoo 17+, dynamic attrs/states are no longer supported in backend views.
                                                                  Keep the options field always visible; it is only used for select/checkbox types. -->
                                                             <field name="options"/>
-                                                        </tree>
+                                                        </list>
                                                     </field>
                                                 </page>
                                             </notebook>
@@ -590,13 +590,13 @@
                                 </group>
                                 <group string="Reviews" invisible="not show_reviews" col="1">
                                     <field name="review_ids" nolabel="1">
-                                        <tree string="Reviews">
+                                        <list string="Reviews">
                                             <field name="sequence" widget="handle"/>
                                             <field name="reviewer_name" string="Reviewer Name"/>
                                             <field name="rating" string="Rating"/>
                                             <field name="review_text" widget="text" string="Review Text" options="{'no_marker': True}"/>
                                             <field name="is_published" widget="boolean_toggle" string="Publish"/>
-                                        </tree>
+                                        </list>
                                         <form string="Review">
                                             <sheet>
                                                 <group>
@@ -617,7 +617,7 @@
                         <page string="Tracking">
                             <group string="Download History" invisible="subscription_plan == 'launch'" col="1">
                                 <field name="download_tracking_ids" nolabel="1">
-                                    <tree limit="50" decoration-muted="download_country == False" decoration-info="download_utm_source != False">
+                                    <list limit="50" decoration-muted="download_country == False" decoration-info="download_utm_source != False">
                                         <field name="download_date" widget="datetime"/>
                                         <field name="download_country"/>
                                         <field name="download_city"/>
@@ -625,7 +625,7 @@
                                         <field name="download_browser"/>
                                         <field name="download_utm_source"/>
                                         <field name="download_referral_code"/>
-                                    </tree>
+                                    </list>
                                 </field>
                             </group>
                         </page>
@@ -870,7 +870,7 @@
         <field name="name">partner.vcard.tree.view</field>
         <field name="model">partner.vcard</field>
         <field name="arch" type="xml">
-            <tree string="Vinc">
+            <list string="Vinc">
                 <field name="name"/>
                 <field name="company_name" string="Company Name" placeholder="Optional - for freelancers, leave blank"/>
                 <field name="function" placeholder="e.g. Sales Director"/>
@@ -878,7 +878,7 @@
                 <field name="phone"/>
                 <field name="is_published" widget="boolean_toggle" string="Published"/>
                 <field name="qr_code" widget="image" class="oe_avatar" options="{'size': (75, 75)}"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -886,7 +886,7 @@
     <record id="action_partner_vcard" model="ir.actions.act_window">
         <field name="name">Vinc Dashboard</field>
         <field name="res_model">partner.vcard</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create your first digital business card!
@@ -907,7 +907,7 @@
     <record id="action_view_vcards_menu" model="ir.actions.act_window">
         <field name="name">Cards</field>
         <field name="res_model">partner.vcard</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create your first digital business card!
@@ -928,7 +928,7 @@
     <record id="action_view_leads_menu" model="ir.actions.act_window">
         <field name="name">Leads</field>
         <field name="res_model">crm.lead</field>
-        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_mode">kanban,list,form</field>
         <field name="context">{'search_default_my_pipeline': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -988,14 +988,14 @@ else:
       <field name="name">partner.vcard.service.question.tree.view</field>
       <field name="model">partner.vcard.service.question</field>
       <field name="arch" type="xml">
-          <tree string="Service Questions" editable="bottom">
+          <list string="Service Questions" editable="bottom">
               <field name="sequence"/>
               <field name="name"/>
               <field name="field_type"/>
               <field name="is_required"/>
               <!-- attrs/states are not supported in Odoo 17+ backend views; show options unconditionally. -->
               <field name="options"/>
-          </tree>
+          </list>
       </field>
   </record>
 

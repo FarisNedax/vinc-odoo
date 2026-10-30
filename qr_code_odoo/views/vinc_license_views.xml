@@ -96,14 +96,14 @@
         <field name="name">vinc.license.tree</field>
         <field name="model">vinc.license</field>
         <field name="arch" type="xml">
-            <tree string="Vinc License" create="false" delete="false">
+            <list string="Vinc License" create="false" delete="false">
                 <field name="key_hint"/>
                 <field name="license_status" decoration-success="license_status == 'active'"
                        decoration-warning="license_status == 'warning'"
                        decoration-danger="license_status in ('degraded', 'failed', 'suspended', 'revoked')" widget="badge"/>
                 <field name="last_validated_at"/>
                 <field name="module_version"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -119,7 +119,7 @@ action = {
     'res_model': 'vinc.license',
     'view_mode': 'form',
     'res_id': record.id,
-    'target': 'inline',
+    'target': 'current',
     'views': [(env.ref('qr_code_odoo.vinc_license_form_view').id, 'form')],
 }
         </field>

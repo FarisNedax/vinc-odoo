@@ -965,7 +965,7 @@ class CrmLead(models.Model):
             'type': 'ir.actions.act_window',
             'name': 'Look-alike Companies',
             'res_model': 'res.partner',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'domain': [('id', 'in', self.lookalike_partner_ids.ids)],
             'context': {'create': False},
             'help': '<p class="o_view_nocontent_smiling_face">No look-alike companies for this lead.</p>',
@@ -977,7 +977,7 @@ class CrmLead(models.Model):
             'type': 'ir.actions.act_window',
             'name': 'Look-alike Open Leads',
             'res_model': 'crm.lead',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'domain': [('id', 'in', self.lookalike_lead_ids.ids)],
             'context': {'create': False},
             'help': '<p class="o_view_nocontent_smiling_face">No similar open leads in your pipeline.</p>',
@@ -1153,7 +1153,6 @@ class PartnerVCard(models.Model):
     website = fields.Char(string='Website')
     image_url = fields.Binary(string='Image')
     banner_image = fields.Binary(string='Banner Image', help='Upload a banner image that appears behind your profile picture (similar to LinkedIn)')
-    title_id = fields.Many2one('res.partner.title', string='Title')
     website_ids = fields.One2many('partner.vcard.website', 'partner_id', string="Websites")
     video_ids = fields.One2many('partner.vcard.videos', 'partner_id', string="Videos")
     review_ids = fields.One2many('partner.vcard.reviews', 'partner_id', string="Reviews")
@@ -1690,11 +1689,11 @@ class PartnerVCard(models.Model):
                     'This is required when the lead collection form is enabled.'
                 )
     
-    _sql_constraints = [
-        ('website_slug_unique', 'unique(website_slug)', 
-         'Website slug must be unique. Please choose a different slug. '
-         'Note: Multiple NULL slugs are allowed (for unpublished vCards).')
-    ]
+    _website_slug_unique = models.Constraint(
+        'unique(website_slug)',
+        'Website slug must be unique. Please choose a different slug. '
+        'Note: Multiple NULL slugs are allowed (for unpublished vCards).',
+    )
     
     def copy(self, default=None):
         """Override copy to set slug to null so user must provide a unique slug"""
@@ -3590,8 +3589,7 @@ If you'd like to save my info again later, here's my card: {vcard_url}
         if not signature_html or not signature_html.strip():
             raise UserError("Generate a signature preview before applying it.")
         # Gate on write access to this card.
-        self.check_access_rights('write')
-        self.check_access_rule('write')
+        self.check_access('write')
         user = self._get_card_owner_user()
         if not user:
             raise UserError(

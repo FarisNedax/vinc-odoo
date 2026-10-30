@@ -334,7 +334,7 @@ class QRCodeController(http.Controller):
         else:
             return request.not_found()
 
-    @http.route('/track_page_view/<string:slug>', type='json', auth='public', methods=['POST'], csrf=False)
+    @http.route('/track_page_view/<string:slug>', type='jsonrpc', auth='public', methods=['POST'], csrf=False)
     def track_page_view(self, slug, **kwargs):
         """Track page views for vCard pages via AJAX call from the page"""
         try:
@@ -379,7 +379,7 @@ class QRCodeController(http.Controller):
 
 class PartnerController(http.Controller):
 
-    @http.route('/get_partner_name', type='json', auth="public", methods=['GET'], csrf=False)
+    @http.route('/get_partner_name', type='jsonrpc', auth="public", methods=['GET'], csrf=False)
     def get_partner_name(self, partner_id=None):
         if not partner_id:
             return {'error': 'No partner ID provided'}
@@ -633,7 +633,7 @@ class NFCOnboardingController(http.Controller):
 
 class ReviewController(http.Controller):
 
-    @http.route('/create_review', type='json', auth='public', methods=['POST'], csrf=False)
+    @http.route('/create_review', type='jsonrpc', auth='public', methods=['POST'], csrf=False)
     def create_review(self, **kwargs):
         _logger.info("create_review route called")
 
@@ -698,7 +698,7 @@ class ReviewController(http.Controller):
 
 class LeadController(http.Controller):
 
-    @http.route('/create_lead', type='json', auth='public', methods=['POST'], csrf=False)
+    @http.route('/create_lead', type='jsonrpc', auth='public', methods=['POST'], csrf=False)
     def create_lead(self, **kwargs):
         _logger.info("create_lead route called")
 
@@ -1133,7 +1133,7 @@ class LeadController(http.Controller):
         except Exception as e:
             _logger.error(f"Error sending intro email: {str(e)}", exc_info=True)
     
-    @http.route('/create_service_request', type='json', auth='public', methods=['POST'], csrf=False)
+    @http.route('/create_service_request', type='jsonrpc', auth='public', methods=['POST'], csrf=False)
     def create_service_request(self, **kwargs):
         """Handle service request submissions"""
         _logger.info("create_service_request route called")
@@ -1288,7 +1288,7 @@ class LeadController(http.Controller):
             _logger.exception("Error in create_service_request")
             return {'status': 'error', 'message': f'Error processing request: {str(e)}'}
 
-    @http.route('/service/questions', type='json', auth='public', methods=['POST'], csrf=False)
+    @http.route('/service/questions', type='jsonrpc', auth='public', methods=['POST'], csrf=False)
     def get_service_questions(self, **kwargs):
         """Return custom questions for a given service."""
         try:
@@ -1559,11 +1559,11 @@ class VCardFormController(http.Controller):
             'bulk_mode': bool(bulk_vcard),
         })
 
-    @http.route(['/vcard/check_slug_availability'], type='json', auth='user', methods=['POST'], csrf=False)
+    @http.route(['/vcard/check_slug_availability'], type='jsonrpc', auth='user', methods=['POST'], csrf=False)
     def check_slug_availability(self, **kwargs):
         """Check if a website slug is available"""
         try:
-            # For type='json' routes, Odoo automatically parses JSON into request.jsonrequest
+            # For type='jsonrpc' routes, Odoo automatically parses JSON into request.jsonrequest
             # Also check kwargs as fallback
             data = request.jsonrequest if hasattr(request, 'jsonrequest') and request.jsonrequest else kwargs
             
@@ -1643,12 +1643,12 @@ class VCardFormController(http.Controller):
                 'error': str(e)
             }
 
-    @http.route(['/vcard/preview'], type='json', auth='user', methods=['POST'], csrf=False)
+    @http.route(['/vcard/preview'], type='jsonrpc', auth='user', methods=['POST'], csrf=False)
     def generate_preview(self, **kwargs):
         """Generate a live preview of the vCard website based on form data"""
         try:
             # Get form data from request
-            # For type='json' routes, Odoo automatically parses JSON into request.jsonrequest
+            # For type='jsonrpc' routes, Odoo automatically parses JSON into request.jsonrequest
             if hasattr(request, 'jsonrequest') and request.jsonrequest:
                 data = request.jsonrequest
             elif hasattr(request, 'httprequest') and request.httprequest.data:

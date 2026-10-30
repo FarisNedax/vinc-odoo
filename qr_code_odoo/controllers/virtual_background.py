@@ -8,7 +8,7 @@ _logger = logging.getLogger(__name__)
 
 class VirtualBackgroundController(http.Controller):
     
-    @http.route('/qr_code_odoo/virtual_bg/list', type='json', auth='public')
+    @http.route('/qr_code_odoo/virtual_bg/list', type='jsonrpc', auth='public')
     def list_backgrounds(self):
         """List available virtual backgrounds dynamically from the filesystem."""
         try:
