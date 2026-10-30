@@ -3,6 +3,12 @@ var isSubmittingReview = false; // For review submissions
 var isSubmittingServiceRequest = false; // For service request submissions
 // Keep native alert behavior in production
 
+// Page texts live in #vinc_i18n (vcard_layout) so they are translated with the page.
+function vincText(key, fallback) {
+    var el = document.querySelector('#vinc_i18n [data-key="' + key + '"]');
+    return el ? el.textContent.trim() : fallback;
+}
+
 $(document).ready(function() {
     console.log('Binding lead submission button handler');
     
@@ -19,9 +25,11 @@ $(document).ready(function() {
             }
             
             console.log('Initializing intl-tel-input on phone field');
+                        // Default country = the website company's country (vcard_layout body attribute).
+                        var defaultCountry = (document.body.dataset.vincPhoneCountry || 'us').toLowerCase();
                         var iti = window.intlTelInput(phoneInput, {
-                            initialCountry: "us",
-                            preferredCountries: ["us", "gb", "ca", "au"],
+                            initialCountry: defaultCountry,
+                            preferredCountries: [defaultCountry].concat(["us", "gb", "ca", "au"].filter(function(c) { return c !== defaultCountry; })),
                             utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.19/js/utils.js",
                             separateDialCode: true,
                             nationalMode: false,
@@ -331,7 +339,7 @@ $(document).ready(function() {
         submitButton.prop('disabled', true);
         // Use text() then append spinner to avoid HTML escaping issues
         var originalText = submitButton.text().trim();
-        submitButton.empty().html('<i class="fa fa-spinner fa-spin"></i> Submitting...');
+        submitButton.empty().html('<i class="fa fa-spinner fa-spin"></i> ' + vincText('submitting', 'Submitting...'));
 
         // Retrieve lead_tag_ids from the hidden input and convert to an array of integers
         var leadTagIdsValue = $('#leadTagIds').val();
@@ -405,14 +413,14 @@ $(document).ready(function() {
                         $('#leadForm')[0].reset();
                     }, 1500);
                 } else {
-                    $('#successMessage').text(result.message || 'Unknown error occurred').show();
+                    $('#successMessage').text(result.message || vincText('unknown_error', 'Unknown error occurred')).show();
                 }
             },
             error: function(xhr, status, error) {
                 console.log('Error during request:', error);
                 console.log('Response text:', xhr.responseText);
                 
-                var errorMessage = 'An error occurred. Please try again.';
+                var errorMessage = vincText('error', 'An error occurred. Please try again.');
                 try {
                     var response = JSON.parse(xhr.responseText);
                     if (response.message) {
@@ -460,7 +468,7 @@ $(document).ready(function() {
         var reviewText = $('#reviewText').val();
         
         if (!reviewerName || !rating || !reviewText) {
-            alert('Please fill in all required fields.');
+            alert(vincText('required', 'Please fill in all required fields.'));
             return false;
         }
 
@@ -468,7 +476,7 @@ $(document).ready(function() {
         var submitButton = $(this);
         var originalHTML = submitButton.html();
         submitButton.prop('disabled', true);
-        submitButton.empty().html('<i class="fa fa-spinner fa-spin"></i> Submitting...');
+        submitButton.empty().html('<i class="fa fa-spinner fa-spin"></i> ' + vincText('submitting', 'Submitting...'));
 
         var formData = {
             reviewer_name: $('#reviewerName').val(),
@@ -522,14 +530,14 @@ $(document).ready(function() {
                     }, 1500);
                 } else {
                     $('#reviewSuccessMessage').removeClass('alert-success').addClass('alert-danger');
-                    $('#reviewSuccessMessage').text(result.message || 'Unknown error occurred').show();
+                    $('#reviewSuccessMessage').text(result.message || vincText('unknown_error', 'Unknown error occurred')).show();
                 }
             },
             error: function(xhr, status, error) {
                 console.log('Error during review request:', error);
                 console.log('Response text:', xhr.responseText);
                 
-                var errorMessage = 'An error occurred. Please try again.';
+                var errorMessage = vincText('error', 'An error occurred. Please try again.');
                 try {
                     var response = JSON.parse(xhr.responseText);
                     if (response.message) {
@@ -637,7 +645,7 @@ $(document).ready(function() {
                 html += '<div class="form-check">' +
                         '<input type="checkbox" class="form-check-input service-question-input"' +
                         ' id="' + fieldId + '"' + commonAttrs + '/>' +
-                        '<label class="form-check-label" for="' + fieldId + '">Yes</label>' +
+                        '<label class="form-check-label" for="' + fieldId + '">' + vincText('yes', 'Yes') + '</label>' +
                         '</div>';
             } else if (q.field_type === 'select') {
                 html += '<select class="form-control service-question-input"' +
@@ -679,7 +687,7 @@ $(document).ready(function() {
         var submitButton = $(this);
         var originalHTML = submitButton.html();
         submitButton.prop('disabled', true);
-        submitButton.empty().html('<i class="fa fa-spinner fa-spin"></i> Sending...');
+        submitButton.empty().html('<i class="fa fa-spinner fa-spin"></i> ' + vincText('sending', 'Sending...'));
 
         // Get full phone number with country code from intl-tel-input
         var phoneNumber = '';
@@ -760,7 +768,7 @@ $(document).ready(function() {
 
                 if (result.status === 'success') {
                     // Show success message
-                    $('#serviceRequestSuccessMessage').text(result.message || 'Thank you! Your service request has been sent. We\'ll be in touch shortly.').show();
+                    $('#serviceRequestSuccessMessage').text(result.message || vincText('service_thanks', 'Thank you! Your service request has been sent. We\'ll be in touch shortly.')).show();
                     // Hide the form after successful submission
                     $('#serviceRequestForm').hide();
                     
@@ -775,14 +783,14 @@ $(document).ready(function() {
                     }, 1500);
                 } else {
                     $('#serviceRequestSuccessMessage').removeClass('alert-success').addClass('alert-danger');
-                    $('#serviceRequestSuccessMessage').text(result.message || 'Unknown error occurred').show();
+                    $('#serviceRequestSuccessMessage').text(result.message || vincText('unknown_error', 'Unknown error occurred')).show();
                 }
             },
             error: function(xhr, status, error) {
                 console.log('Error during service request:', error);
                 console.log('Response text:', xhr.responseText);
                 
-                var errorMessage = 'An error occurred. Please try again.';
+                var errorMessage = vincText('error', 'An error occurred. Please try again.');
                 try {
                     var response = JSON.parse(xhr.responseText);
                     if (response.message) {

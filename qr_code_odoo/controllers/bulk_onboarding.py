@@ -601,7 +601,7 @@ class BulkOnboardingController(http.Controller):
                 return {'success': False, 'error': 'User not found'}
             
             rep.action_resend_invitation()
-            return {'success': True, 'message': 'Invitation resent successfully'}
+            return {'success': True, 'message': request.env._('Invitation resent successfully')}
         except Exception as e:
             _logger.error(f"Error resending invitation for rep {rep_id}: {str(e)}", exc_info=True)
             return {'success': False, 'error': str(e)}
@@ -781,7 +781,7 @@ class BulkOnboardingController(http.Controller):
         except Exception as e:
             return {'success': False, 'error': str(e)}
         self._start_batch_async(batch)
-        return {'success': True, 'message': f'Processing {len(pending)} rep(s) in the background.'}
+        return {'success': True, 'message': request.env._('Processing %s rep(s) in the background.', len(pending))}
 
     @http.route('/bulk-onboard/batch/<int:batch_id>/delete', type='http', auth='user', website=True, csrf=True, methods=['POST'])
     def delete_batch(self, batch_id, **kwargs):

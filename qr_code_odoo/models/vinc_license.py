@@ -75,7 +75,7 @@ class VincLicense(models.Model):
         record = self
 
         if not record.license_key:
-            raise UserError("Please enter a license key and save before activating.")
+            raise UserError(self.env._("Please enter a license key and save before activating."))
 
         # Set key hint if not already set
         if not record.key_hint and record.license_key:
@@ -106,9 +106,9 @@ class VincLicense(models.Model):
                 "license_status": "not_activated",
                 "database_fingerprint": fingerprint,
             })
-            raise UserError(
+            raise UserError(self.env._(
                 "Could not reach the license server. Check your internet connection and try again."
-            )
+            ))
 
         if resp.status_code == 200 and data.get("status") == "active":
             interval = data.get("validation_interval_hours", VALIDATE_INTERVAL_HOURS)
@@ -130,7 +130,7 @@ class VincLicense(models.Model):
             error_code = data.get("error_code", "UNKNOWN")
             _logger.error("License activation failed: %s - %s", error_code, error_msg)
             record.sudo().write({"license_status": "failed"})
-            raise UserError(f"License activation failed: {error_msg}")
+            raise UserError(self.env._("License activation failed: %s", error_msg))
 
     def _cron_validate_license(self):
         """Periodic heartbeat validation. Called by Odoo cron."""
@@ -219,7 +219,7 @@ class VincLicense(models.Model):
 
         email = (self.request_email or "").strip()
         if not email or "@" not in email:
-            raise UserError("Please enter a valid email address.")
+            raise UserError(self.env._("Please enter a valid email address."))
 
         server_url = self._get_server_url()
 
@@ -232,13 +232,13 @@ class VincLicense(models.Model):
             data = resp.json()
         except requests.RequestException as e:
             _logger.warning("License key request network error: %s", e)
-            raise UserError(
+            raise UserError(self.env._(
                 "Could not reach the license server. "
                 "Check your internet connection and try again."
-            )
+            ))
 
         if resp.status_code == 429:
-            raise UserError(data.get("error", "Too many requests. Please try again later."))
+            raise UserError(data.get("error") or self.env._("Too many requests. Please try again later."))
 
         if resp.status_code == 200 and data.get("ok"):
             license_key = data.get("license_key")
@@ -322,27 +322,27 @@ class VincLicense(models.Model):
         if status in ("active", "warning"):
             return  # all good
         if status == "suspended":
-            raise UserError(
+            raise UserError(self.env._(
                 "This Vinc license has been suspended by the administrator. "
                 "All changes are blocked. Contact your reseller or Vinc support."
-            )
+            ))
         if status == "revoked":
-            raise UserError(
+            raise UserError(self.env._(
                 "This Vinc license has been revoked. "
                 "Go to Vinc ▸ License to enter a new license key, "
                 "or contact your reseller."
-            )
+            ))
         if status == "degraded":
-            raise UserError(
+            raise UserError(self.env._(
                 "Vinc license validation has failed for over 60 days. "
                 "The module is in read-only mode — no changes are allowed. "
                 "Go to Vinc ▸ License and re-validate, or contact your reseller."
-            )
+            ))
         # not_activated, failed, or anything else
-        raise UserError(
+        raise UserError(self.env._(
             "Vinc is not licensed. Go to Vinc ▸ License to enter and "
             "activate your license key before using the module."
-        )
+        ))
 
     def is_active(self):
         """Check if the license allows full operation."""

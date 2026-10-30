@@ -469,7 +469,7 @@ class LeadbackScheduledEmail(models.Model):
         """Manually send the scheduled email"""
         self.ensure_one()
         if self.state != 'pending':
-            raise UserError("Only pending emails can be sent")
+            raise UserError(self.env._("Only pending emails can be sent"))
         
         self._send_email()
         return True
@@ -1163,7 +1163,7 @@ class PartnerVCard(models.Model):
     calendly_url = fields.Char(string="Calendar URL", help="Enter your Calendly URL (e.g., https://calendly.com/username). This will be displayed in the Calendar tab of the Minimal template.")
     
     # Reviews section settings
-    reviews_section_title = fields.Char(string="Reviews Section Title", default="Reviews", 
+    reviews_section_title = fields.Char(string="Reviews Section Title", default=lambda self: self.env._("Reviews"), 
                                       help="Title for the reviews section on the website")
     show_reviews = fields.Boolean(string="Show Reviews Section", default=True, 
                                 help="Display the reviews section on the website")
@@ -1173,7 +1173,7 @@ class PartnerVCard(models.Model):
                                              help="Time in seconds between automatic carousel transitions (0 to disable autoscroll)")
     review_thank_you_message = fields.Char(
         string="Review Thank You Message",
-        default="Thank you for your review! We appreciate your feedback.",
+        default=lambda self: self.env._("Thank you for your review! We appreciate your feedback."),
         help="Message displayed after review submission"
     )
     
@@ -1286,7 +1286,7 @@ class PartnerVCard(models.Model):
              "Use it for trade shows, conferences, or open houses. "
              "Clear it when the show ends.",
     )
-    lead_button_label = fields.Char(string="Lead Button Label", default="Leave Your Info", help="Label for the lead form button")
+    lead_button_label = fields.Char(string="Lead Button Label", default=lambda self: self.env._("Leave Your Info"), help="Label for the lead form button")
     form_thank_you_message = fields.Char(
         string="Form Thank You Message",
         help="Message displayed after form submission. If empty, a default message will be used."
@@ -1684,10 +1684,10 @@ class PartnerVCard(models.Model):
         """Ensure mailing list is set when form is enabled"""
         for record in self:
             if record.show_form and not record.mailing_list_id:
-                raise ValidationError(
+                raise ValidationError(self.env._(
                     'Please select an Email Marketing List. '
                     'This is required when the lead collection form is enabled.'
-                )
+                ))
     
     _website_slug_unique = models.Constraint(
         'unique(website_slug)',
@@ -1719,16 +1719,16 @@ class PartnerVCard(models.Model):
             # Slug is only required when published or when generating website
             if record.is_published or record.website_page_id:
                 if not record.website_slug:
-                    raise ValidationError(
+                    raise ValidationError(self.env._(
                         'Website slug is required to publish a vCard. Please enter a unique URL slug.'
-                    )
+                    ))
                 
                 # Check for valid slug format (alphanumeric, hyphens, underscores)
                 import re
                 if not re.match(r'^[a-zA-Z0-9_-]+$', record.website_slug):
-                    raise ValidationError(
+                    raise ValidationError(self.env._(
                         'Website slug can only contain letters, numbers, hyphens, and underscores.'
-                    )
+                    ))
                 
                 # Check uniqueness (slug must be globally unique)
                 existing = self.search([
@@ -1736,9 +1736,9 @@ class PartnerVCard(models.Model):
                     ('id', '!=', record.id)
                 ])
                 if existing:
-                    raise ValidationError(
-                        f'Website slug "{record.website_slug}" is already taken. Please choose a different slug.'
-                    )
+                    raise ValidationError(self.env._(
+                        'Website slug "%s" is already taken. Please choose a different slug.', record.website_slug
+                    ))
     
     @api.constrains('enable_instant_leadback', 'leadback_channels')
     def _check_leadback_config_required(self):
@@ -1746,20 +1746,20 @@ class PartnerVCard(models.Model):
         for record in self:
             if record.enable_instant_leadback:
                 if not record.leadback_channels:
-                    raise ValidationError(
+                    raise ValidationError(self.env._(
                         'Please select at least one Message Channel '
                         '(WhatsApp, Viber, or Telegram) when Click to Chat is enabled.'
-                    )
+                    ))
 
                 # Vestigial branch retained for the legacy code below it; the
                 # block always evaluates True so unreachable validators below
                 # don't fire.
                 if record.leadback_enable_messaging:
                     if not record.leadback_channels:
-                        raise ValidationError(
+                        raise ValidationError(self.env._(
                             'Please select at least one Message Channel. '
                             'This is required when "Enable Click to Chat" is enabled.'
-                        )
+                        ))
     
     @api.depends('crm_opportunity_ids')
     def _compute_vcard_opportunity_count(self):
@@ -1902,7 +1902,7 @@ class PartnerVCard(models.Model):
                 'target': 'new',
             }
         else:
-            raise ValidationError('Website URL is not available. Please generate the website first.')
+            raise ValidationError(self.env._('Website URL is not available. Please generate the website first.'))
 
     def action_open_nfc_guide(self):
         """Open the NFC card programming guide"""
@@ -1920,7 +1920,7 @@ class PartnerVCard(models.Model):
         """Download QR code - redirects to download URL"""
         self.ensure_one()
         if not self.qr_code:
-            raise ValidationError('QR code is not available. Please generate the website first.')
+            raise ValidationError(self.env._('QR code is not available. Please generate the website first.'))
         # Relative URL resolves against the current origin — avoids leaking a
         # hardcoded localhost:8069 fallback when web.base.url isn't configured.
         return {
@@ -2432,10 +2432,10 @@ class PartnerVCard(models.Model):
         
         if not self.email:
             brand_name = self.env['qr_code_odoo.brand'].sudo().get_brand_name()
-            raise UserError(f'Please set an email address on your {brand_name} Card to receive digest emails.')
+            raise UserError(self.env._('Please set an email address on your %s Card to receive digest emails.', brand_name))
         
         if not self.digest_enabled:
-            raise UserError('Please enable digest emails first.')
+            raise UserError(self.env._('Please enable digest emails first.'))
         
         result = self._send_digest_email(force_send=True)
         
@@ -2444,14 +2444,14 @@ class PartnerVCard(models.Model):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': 'Success',
-                    'message': f'Test digest email sent to {self.email}',
+                    'title': self.env._('Success'),
+                    'message': self.env._('Test digest email sent to %s', self.email),
                     'type': 'success',
                     'sticky': False,
                 }
             }
         else:
-            raise UserError('Failed to send digest email. Please check the logs for details.')
+            raise UserError(self.env._('Failed to send digest email. Please check the logs for details.'))
     
     def action_test_intro_email(self):
         """Preview intro email template with sample data"""
@@ -2459,7 +2459,7 @@ class PartnerVCard(models.Model):
         from odoo.exceptions import UserError
         
         if not self.intro_email_enabled:
-            raise UserError("Please enable 'Send intro email automatically' first.")
+            raise UserError(self.env._("Please enable 'Send intro email automatically' first."))
         
         # Prepare template variables
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
@@ -2510,7 +2510,7 @@ class PartnerVCard(models.Model):
         from odoo.exceptions import UserError
         
         if not self.leadback_send_email:
-            raise UserError("Please enable 'Enable Automated Email' first.")
+            raise UserError(self.env._("Please enable 'Enable Automated Email' first."))
         
         # Prepare template variables
         vcard_url = self.website_full_url or f"{self.env['ir.config_parameter'].sudo().get_param('web.base.url')}/{self.website_slug}"
@@ -2561,10 +2561,10 @@ class PartnerVCard(models.Model):
         from odoo.exceptions import UserError
         
         if not self.leadback_enable_messaging:
-            raise UserError("Please enable 'Enable Click to Chat' first.")
+            raise UserError(self.env._("Please enable 'Enable Click to Chat' first."))
         
         if not self.leadback_channels:
-            raise UserError("Please select at least one messaging channel.")
+            raise UserError(self.env._("Please select at least one messaging channel."))
         
         # Prepare template variables
         vcard_url = self.website_full_url or f"{self.env['ir.config_parameter'].sudo().get_param('web.base.url')}/{self.website_slug}"
@@ -2622,7 +2622,7 @@ class PartnerVCard(models.Model):
                     })
         
         if not links:
-            raise UserError("Failed to generate test links. Please check your channel configuration.")
+            raise UserError(self.env._("Failed to generate test links. Please check your channel configuration."))
         
         # Create links HTML
         links_html = '<br/>'.join([
@@ -3587,15 +3587,15 @@ If you'd like to save my info again later, here's my card: {vcard_url}
         """
         self.ensure_one()
         if not signature_html or not signature_html.strip():
-            raise UserError("Generate a signature preview before applying it.")
+            raise UserError(self.env._("Generate a signature preview before applying it."))
         # Gate on write access to this card.
         self.check_access('write')
         user = self._get_card_owner_user()
         if not user:
-            raise UserError(
+            raise UserError(self.env._(
                 "Couldn't find an Odoo user for this card. Its email must match "
                 "a user's login or email to set that user's signature."
-            )
+            ))
         user.sudo().write({'signature': signature_html})
         return {'user_id': user.id, 'user_name': user.name, 'login': user.login}
 
@@ -3614,11 +3614,11 @@ If you'd like to save my info again later, here's my card: {vcard_url}
             try:
                 Image.open(io.BytesIO(base64.b64decode(record.qr_logo))).verify()
             except Exception:
-                raise ValidationError(
+                raise ValidationError(self.env._(
                     "That QR logo couldn't be read as an image. Please upload a "
                     "PNG or JPG (vector formats like SVG aren't supported for the "
                     "QR logo)."
-                )
+                ))
 
     def _generate_qr_code_data(self):
         """Generate and store QR code data based on the partner's information."""

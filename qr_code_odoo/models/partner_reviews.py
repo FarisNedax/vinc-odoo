@@ -56,4 +56,4 @@ class PartnerReviews(models.Model):
     def _check_rating(self):
         for record in self:
             if record.rating and int(record.rating) not in range(1, 6):
-                raise ValidationError("Rating must be between 1 and 5 stars.")
+                raise ValidationError(self.env._("Rating must be between 1 and 5 stars."))

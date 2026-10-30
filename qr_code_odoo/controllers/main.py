@@ -23,6 +23,18 @@ _logger = logging.getLogger(__name__)
 _DEFAULT_IMAGE_CACHE = {}
 
 
+def _visitor_env():
+    """Env in the language the visitor's card page was shown in.
+
+    The card's JSON routes are not website routes, so their env carries the
+    session language; the page language is in the frontend_lang cookie.
+    """
+    lang = request.cookies.get('frontend_lang')
+    if lang not in dict(request.env['res.lang'].get_installed()):
+        lang = request.env.lang
+    return request.env(context=dict(request.env.context, lang=lang))
+
+
 def _cached_default_image(vcard_env, kind):
     """Return a cached base64 default image ('profile' or 'banner'), loading on first miss."""
     if kind in _DEFAULT_IMAGE_CACHE:
@@ -635,6 +647,7 @@ class ReviewController(http.Controller):
 
     @http.route('/create_review', type='jsonrpc', auth='public', methods=['POST'], csrf=False)
     def create_review(self, **kwargs):
+        env = _visitor_env()
         _logger.info("create_review route called")
 
         try:
@@ -654,17 +667,17 @@ class ReviewController(http.Controller):
                 _logger.info(f"Converted partner_id to int: {partner_vcard_id}")
             except (ValueError, TypeError):
                 _logger.error(f"Invalid partner_id: {partner_vcard_id}")
-                return {'status': 'error', 'message': 'Invalid partner ID'}
+                return {'status': 'error', 'message': env._("Invalid partner ID")}
 
             # Validate required fields
             if not reviewer_name or not rating or not review_text:
                 _logger.error("Missing required fields: reviewer_name, rating, or review_text")
-                return {'status': 'error', 'message': 'Missing required fields'}
+                return {'status': 'error', 'message': env._("Missing required fields")}
 
             # Validate rating
             if rating not in ['1', '2', '3', '4', '5']:
                 _logger.error(f"Invalid rating: {rating}")
-                return {'status': 'error', 'message': 'Invalid rating value'}
+                return {'status': 'error', 'message': env._("Invalid rating value")}
 
             # Search for the partner by ID
             partner = request.env['partner.vcard'].sudo().search([('id', '=', partner_vcard_id)], limit=1)
@@ -673,7 +686,7 @@ class ReviewController(http.Controller):
             # Check if the partner exists
             if not partner:
                 _logger.error(f"Partner with ID {partner_vcard_id} not found")
-                return {'status': 'error', 'message': 'Partner not found'}
+                return {'status': 'error', 'message': env._("Partner not found")}
 
             # Create the review (unpublished by default)
             review = request.env['partner.vcard.reviews'].sudo().create({
@@ -687,19 +700,20 @@ class ReviewController(http.Controller):
             _logger.info(f"Review created successfully with ID: {review.id}")
 
             # Retrieve the custom thank you message from the partner
-            custom_message = partner.review_thank_you_message or 'Thank you for your review! We appreciate your feedback.'
+            custom_message = partner.review_thank_you_message or env._("Thank you for your review! We appreciate your feedback.")
 
             # Return success response in the format expected by JavaScript
             return {'status': 'success', 'message': custom_message, 'review_id': review.id}
 
         except Exception as e:
             _logger.exception("Error in create_review")
-            return {'status': 'error', 'message': f'Error processing request: {str(e)}'}
+            return {'status': 'error', 'message': env._("Error processing request: %s", e)}
 
 class LeadController(http.Controller):
 
     @http.route('/create_lead', type='jsonrpc', auth='public', methods=['POST'], csrf=False)
     def create_lead(self, **kwargs):
+        env = _visitor_env()
         _logger.info("create_lead route called")
 
         try:
@@ -738,12 +752,12 @@ class LeadController(http.Controller):
                 _logger.info(f"Converted partner_id to int: {partner_vcard_id}")
             except (ValueError, TypeError):
                 _logger.error(f"Invalid partner_id: {partner_vcard_id}")
-                return {'status': 'error', 'message': 'Invalid partner ID'}
+                return {'status': 'error', 'message': env._("Invalid partner ID")}
 
             # Validate required fields
             if not contact_name or not email_from:
                 _logger.error("Missing required fields: contact_name or email_from")
-                return {'status': 'error', 'message': 'Missing required fields'}
+                return {'status': 'error', 'message': env._("Missing required fields")}
 
             # Search for the partner by ID
             partner = request.env['partner.vcard'].sudo().search([('id', '=', partner_vcard_id)], limit=1)
@@ -753,7 +767,7 @@ class LeadController(http.Controller):
             # Check if the partner exists
             if not partner:
                 _logger.error(f"Partner with ID {partner_vcard_id} not found")
-                return {'status': 'error', 'message': 'Partner not found'}
+                return {'status': 'error', 'message': env._("Partner not found")}
 
             # Validate and filter lead_tag_ids to ensure they belong to the partner
             valid_tag_ids = []
@@ -874,14 +888,14 @@ class LeadController(http.Controller):
                     # Don't fail the lead creation if reminder scheduling fails
 
             # Retrieve the custom thank you message from the partner
-            custom_message = partner.form_thank_you_message or 'Thank you! I look forward to talking to you soon!'
+            custom_message = partner.form_thank_you_message or env._("Thank you! I look forward to talking to you soon!")
 
             # Return success response in the format expected by JavaScript
             return {'status': 'success', 'message': custom_message, 'opportunity_id': opportunity.id}
 
         except Exception as e:
             _logger.exception("Error in create_lead")
-            return {'status': 'error', 'message': f'Error processing request: {str(e)}'}
+            return {'status': 'error', 'message': env._("Error processing request: %s", e)}
     
     def _add_to_mailing_list(self, name, email, partner, lead_tags=None):
         """Add contact to email marketing mailing list with tags"""
@@ -1136,6 +1150,7 @@ class LeadController(http.Controller):
     @http.route('/create_service_request', type='jsonrpc', auth='public', methods=['POST'], csrf=False)
     def create_service_request(self, **kwargs):
         """Handle service request submissions"""
+        env = _visitor_env()
         _logger.info("create_service_request route called")
 
         try:
@@ -1170,14 +1185,14 @@ class LeadController(http.Controller):
             # Validate required fields
             if not contact_name or not email_from or not partner_vcard_id or not service_id:
                 _logger.error("Missing required fields in service request")
-                return {'status': 'error', 'message': 'Missing required fields'}
+                return {'status': 'error', 'message': env._("Missing required fields")}
 
             # Search for the partner by ID
             partner = request.env['partner.vcard'].sudo().search([('id', '=', partner_vcard_id)], limit=1)
             
             if not partner:
                 _logger.error(f"Partner with ID {partner_vcard_id} not found")
-                return {'status': 'error', 'message': 'Partner not found'}
+                return {'status': 'error', 'message': env._("Partner not found")}
             
             _logger.info(f"Partner found: {partner.exists()}")
 
@@ -1189,7 +1204,7 @@ class LeadController(http.Controller):
             
             if not service:
                 _logger.error(f"Service with ID {service_id} not found for partner {partner_vcard_id}")
-                return {'status': 'error', 'message': 'Service not found'}
+                return {'status': 'error', 'message': env._("Service not found")}
 
             # Build description for CRM lead
             lead_description = f"New lead for service: {service_name}\n\n"
@@ -1275,7 +1290,7 @@ class LeadController(http.Controller):
                     _logger.error(f"Error sending service request notification email: {str(e)}", exc_info=True)
 
             # Retrieve the custom thank you message from the service
-            custom_message = service.thank_you_message or 'Thank you! Your service request has been sent. We\'ll be in touch shortly.'
+            custom_message = service.thank_you_message or env._("Thank you! Your service request has been sent. We'll be in touch shortly.")
 
             # Return success response
             return {
@@ -1286,20 +1301,21 @@ class LeadController(http.Controller):
 
         except Exception as e:
             _logger.exception("Error in create_service_request")
-            return {'status': 'error', 'message': f'Error processing request: {str(e)}'}
+            return {'status': 'error', 'message': env._("Error processing request: %s", e)}
 
     @http.route('/service/questions', type='jsonrpc', auth='public', methods=['POST'], csrf=False)
     def get_service_questions(self, **kwargs):
         """Return custom questions for a given service."""
+        env = _visitor_env()
         try:
             data = json.loads(request.httprequest.data or '{}')
             service_id = data.get('service_id')
             if not service_id:
-                return {'status': 'error', 'message': 'Missing service_id'}
+                return {'status': 'error', 'message': env._("Missing service_id")}
 
             service = request.env['partner.vcard.service'].sudo().browse(int(service_id))
             if not service or not service.exists():
-                return {'status': 'error', 'message': 'Service not found'}
+                return {'status': 'error', 'message': env._("Service not found")}
 
             questions = []
             for q in service.question_ids:
@@ -1314,7 +1330,7 @@ class LeadController(http.Controller):
             return {'status': 'ok', 'questions': questions}
         except Exception as e:
             _logger.exception("Error fetching service questions")
-            return {'status': 'error', 'message': f'Error fetching questions: {str(e)}'}
+            return {'status': 'error', 'message': env._("Error fetching questions: %s", e)}
     
     def _send_service_request_notification_email(self, partner, opportunity, service, contact_name, email_from, phone, notes):
         """Send notification email to vCard owner when a service request is submitted"""

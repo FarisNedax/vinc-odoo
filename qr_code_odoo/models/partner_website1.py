@@ -8,6 +8,7 @@ Unauthorized copying, modification, or distribution prohibited.
 """
 from odoo import models, api, fields
 from odoo.exceptions import ValidationError
+from .card_i18n import sync_card_view_translations
 import base64
 from PIL import Image
 import io
@@ -149,10 +150,10 @@ class PartnerWebsite(models.Model):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': 'Website slug required',
-                    'message': 'No website was generated. These cards have no '
-                               'URL slug: %s. Enter a unique slug first.'
-                               % ', '.join(skipped.mapped('display_name')),
+                    'title': self.env._('Website slug required'),
+                    'message': self.env._('No website was generated. These cards have no '
+                                          'URL slug: %s. Enter a unique slug first.',
+                                          ', '.join(skipped.mapped('display_name'))),
                     'type': 'danger',
                     'sticky': True,
                 }
@@ -191,7 +192,9 @@ class PartnerWebsite(models.Model):
                         'website_id': self.env['website'].get_current_website().id,
                     })
                     view_id = new_view.id
-        
+
+                sync_card_view_translations(self.env['ir.ui.view'].browse(view_id))
+
                 # Check if a website page exists for the slug, if not, create it
                 existing_page = self.env['website.page'].search([('url', '=', f'/{record.website_slug}')], limit=1)
                 if existing_page:
@@ -219,8 +222,8 @@ class PartnerWebsite(models.Model):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': 'Success!',
-                    'message': f'Website generated with {self.website_template} template!',
+                    'title': self.env._('Success!'),
+                    'message': self.env._('Website generated with %s template!', self.website_template),
                     'type': 'success',
                     'sticky': True,
                 }
@@ -231,8 +234,8 @@ class PartnerWebsite(models.Model):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': 'Error',
-                    'message': f'Failed: {str(e)}',
+                    'title': self.env._('Error'),
+                    'message': self.env._('Failed: %s', e),
                     'type': 'danger',
                     'sticky': True,
                 }
@@ -735,7 +738,7 @@ class PartnerWebsite(models.Model):
        t-att-style="'grid-column: 1 / -1; background-color: ' + (partner.secondary_color or '#2563eb') + '; color: white; padding: 12px; border-radius: 8px; font-weight: bold; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: transform 0.1s; display: inline-block; text-align: center;'"
        onmouseover="this.style.transform='scale(0.95)'"
        onmouseout="this.style.transform='scale(1)'">
-       Get <t t-esc="partner.name.split(' ')[0] if partner.name else 'Contact'"/>'s Info
+       <t t-set="vinc_label">Get %(name)s's Info</t><t t-out="vinc_label % {{'name': partner.name.split(' ')[0] if partner.name else ''}}"/>
     </a>
     
     <!-- Drop Your Info Button (Full Width) -->
@@ -746,7 +749,7 @@ class PartnerWebsite(models.Model):
            data-target="#leadModal"
            onmouseover="this.style.transform='scale(0.95)'"
            onmouseout="this.style.transform='scale(1)'">
-           <t t-esc="partner.lead_button_label or 'Drop Your Info'"/>
+           <t t-if="partner.lead_button_label" t-esc="partner.lead_button_label"/><t t-else="">Drop Your Info</t>
         </a>
     </t>
     
@@ -899,7 +902,7 @@ class PartnerWebsite(models.Model):
         <button type="button" id="submitLeadBtn" class="btn" t-att-style="'background-color: ' + (partner.secondary_color or '#8b5cf6') + '; color: white; border: none; font-weight: 600; padding: 12px 24px; border-radius: 8px; width: 100%;'">
           Share My Contact
         </button>
-        <small style="text-align: center; color: #6b7280; font-size: 12px; margin: 0;">* By clicking the 'Share My Contact' button, I agree to be contacted by <t t-esc="partner.name or ''"/></small>
+        <small style="text-align: center; color: #6b7280; font-size: 12px; margin: 0;"><t t-set="vinc_label">* By clicking the 'Share My Contact' button, I agree to be contacted by %(name)s</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/></small>
       </div>
     </div>
   </div>
@@ -916,7 +919,7 @@ class PartnerWebsite(models.Model):
           </div>
           <div style="flex: 1;">
             <h5 class="modal-title" style="margin: 0; font-weight: 600; font-size: 18px; color: #111827;" id="qrCodeModalLabel">
-              <t t-esc="partner.name or 'QR Code'"/>
+              <t t-if="partner.name" t-esc="partner.name"/><t t-else="">QR Code</t>
             </h5>
             <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;">Scan to connect</p>
           </div>
@@ -927,7 +930,7 @@ class PartnerWebsite(models.Model):
       </div>
       <div class="modal-body" style="padding: 16px 24px 24px 24px; text-align: center;">
         <p style="margin: 0 0 20px 0; font-size: 14px; color: #6b7280; line-height: 1.5;">
-          Scan this QR code to quickly save <t t-esc="partner.name or 'this contact'"/>'s information to your device.
+          <t t-set="vinc_label">Scan this QR code to quickly save %(name)s's information to your device.</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/>
         </p>
         <div t-att-style="'padding: 20px; border-radius: 12px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: ' + (partner.primary_color or '#ffffff') + ';'">
           <img t-att-src="'/vcard/qr_code/download/' + str(partner.id)" 
@@ -1065,7 +1068,7 @@ class PartnerWebsite(models.Model):
         </form>
       </div>
       <div class="modal-footer" style="border-top: none; padding: 0 24px 24px 24px; text-align: center;">
-        <small style="color: #6b7280; font-size: 12px;">* By clicking 'Send Request', I agree to be contacted by <t t-esc="partner.name or ''"/> regarding this service</small>
+        <small style="color: #6b7280; font-size: 12px;"><t t-set="vinc_label">* By clicking 'Send Request', I agree to be contacted by %(name)s regarding this service</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/></small>
                                 </div>
                             </div>
                         </div>
@@ -1125,7 +1128,7 @@ class PartnerWebsite(models.Model):
 
       </div>
      <div class="modal-footer" style="justify-content: center !important; padding: 0;">
-    <small>* Your review will be visible once approved by <t t-esc="partner.name or ''"/> </small>
+    <small><t t-set="vinc_label">* Your review will be visible once approved by %(name)s</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/> </small>
                                 </div>
                             </div>
                         </div>
@@ -1430,7 +1433,7 @@ class PartnerWebsite(models.Model):
     <section class="s_text_block o_colored_level pt0 pb0"
              t-att-style="'background-color: ' + (partner.primary_color or '#fff') + '; text-align: center; padding: 20px 0;'">
         <h4 t-att-style="'color: ' + (partner.secondary_color or '#000') + '; margin-bottom: 30px;'">
-            <t t-esc="partner.reviews_section_title or 'Reviews'"/>
+            <t t-if="partner.reviews_section_title" t-esc="partner.reviews_section_title"/><t t-else="">Reviews</t>
         </h4>
         
         <!-- Reviews section with proper centering -->
@@ -1458,7 +1461,7 @@ class PartnerWebsite(models.Model):
                                         </div>
                                         <div class="reviewer-info">
                                             <h5 t-att-style="'color: ' + (partner.secondary_color or '#000') + '; margin: 0; font-weight: bold; font-size: 16px;'">
-                                                — <t t-esc="review.reviewer_name or 'Anonymous'"/>
+                                                — <t t-if="review.reviewer_name" t-esc="review.reviewer_name"/><t t-else="">Anonymous</t>
                                             </h5>
                                         </div>
                                     </div>
@@ -2509,7 +2512,7 @@ class PartnerWebsite(models.Model):
                                onmouseover="this.style.transform='scale(0.95)'"
                                onmouseout="this.style.transform='scale(1)'">
                                 <i class="fa fa-paper-plane" style="font-size: 16px;"></i>
-                                <span><t t-esc="partner.lead_button_label or 'Drop Info'"/></span>
+                                <span><t t-if="partner.lead_button_label" t-esc="partner.lead_button_label"/><t t-else="">Drop Info</t></span>
                             </a>
                         </t>
                         
@@ -2519,7 +2522,7 @@ class PartnerWebsite(models.Model):
                            onmouseover="this.style.transform='scale(0.95)'"
                            onmouseout="this.style.transform='scale(1)'">
                             <i class="fa fa-download" style="font-size: 16px;"></i>
-                            <span>Get <t t-esc="partner.name.split(' ')[0] if partner.name else 'Contact'"/>'s Info</span>
+                            <span><t t-set="vinc_label">Get %(name)s's Info</t><t t-out="vinc_label % {{'name': partner.name.split(' ')[0] if partner.name else ''}}"/></span>
                         </a>
                         
                         <!-- QR Code Button (instead of Share) -->
@@ -2977,7 +2980,7 @@ class PartnerWebsite(models.Model):
                          t-att-style="'background-color: ' + (partner.primary_color or '#ffffff') + '; padding: 12px 0;'">
                     <div class="s_allow_columns container" style="max-width: 600px; margin: 0 auto; padding: 0 16px;">
                         <h4 t-att-style="'color: ' + (partner.secondary_color or '#000') + '; margin-bottom: 24px; text-align: left;'">
-                            <t t-esc="partner.reviews_section_title or 'Reviews'"/>
+                            <t t-if="partner.reviews_section_title" t-esc="partner.reviews_section_title"/><t t-else="">Reviews</t>
                         </h4>
                         <div class="reviews-container" t-att-style="'text-align: center; max-width: 100%; background-color: ' + (partner.primary_color or '#ffffff') + ';'">
                             <t t-if="partner.review_ids">
@@ -3001,7 +3004,7 @@ class PartnerWebsite(models.Model):
                                                     </div>
                                                     <div class="reviewer-info">
                                                         <h5 t-att-style="'color: ' + (partner.secondary_color or '#000') + '; margin: 0; font-weight: 600; font-size: 14px;'">
-                                                            — <t t-esc="review.reviewer_name or 'Anonymous'"/>
+                                                            — <t t-if="review.reviewer_name" t-esc="review.reviewer_name"/><t t-else="">Anonymous</t>
                                                         </h5>
                                                     </div>
                                                 </div>
@@ -3116,7 +3119,7 @@ class PartnerWebsite(models.Model):
                     <button type="button" id="submitLeadBtn" class="btn" t-att-style="'background-color: ' + (partner.secondary_color or '#8b5cf6') + '; color: white; border: none; font-weight: 600; padding: 12px 24px; border-radius: 8px; width: 100%;'">
                       Share My Contact
                     </button>
-                    <small style="text-align: center; color: #6b7280; font-size: 12px; margin: 0;">* By clicking the 'Share My Contact' button, I agree to be contacted by <t t-esc="partner.name or ''"/></small>
+                    <small style="text-align: center; color: #6b7280; font-size: 12px; margin: 0;"><t t-set="vinc_label">* By clicking the 'Share My Contact' button, I agree to be contacted by %(name)s</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/></small>
                   </div>
                 </div>
               </div>
@@ -3133,7 +3136,7 @@ class PartnerWebsite(models.Model):
                       </div>
                       <div style="flex: 1;">
                         <h5 class="modal-title" style="margin: 0; font-weight: 600; font-size: 18px; color: #111827;" id="qrCodeModalLabel">
-                          <t t-esc="partner.name or 'QR Code'"/>
+                          <t t-if="partner.name" t-esc="partner.name"/><t t-else="">QR Code</t>
                         </h5>
                         <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;">Scan to connect</p>
                       </div>
@@ -3144,7 +3147,7 @@ class PartnerWebsite(models.Model):
                   </div>
                   <div class="modal-body" style="padding: 16px 24px 24px 24px; text-align: center;">
                     <p style="margin: 0 0 20px 0; font-size: 14px; color: #6b7280; line-height: 1.5;">
-                      Scan this QR code to quickly save <t t-esc="partner.name or 'this contact'"/>'s information to your device.
+                      <t t-set="vinc_label">Scan this QR code to quickly save %(name)s's information to your device.</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/>
                     </p>
                     <div t-att-style="'background: ' + (partner.primary_color or '#ffffff') + '; padding: 20px; border-radius: 12px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'">
                       <img t-att-src="'/vcard/qr_code/download/' + str(partner.id)" 
@@ -3213,7 +3216,7 @@ class PartnerWebsite(models.Model):
             </form>
                   </div>
                  <div class="modal-footer" style="justify-content: center !important; padding: 0;">
-                <small>* Your review will be visible once approved by <t t-esc="partner.name or ''"/> </small>
+                <small><t t-set="vinc_label">* Your review will be visible once approved by %(name)s</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/> </small>
                                 </div>
                             </div>
                         </div>
@@ -3274,7 +3277,7 @@ class PartnerWebsite(models.Model):
                     </form>
                   </div>
                   <div class="modal-footer" style="border-top: none; padding: 0 24px 24px 24px; text-align: center;">
-                    <small style="color: #6b7280; font-size: 12px;">* By clicking 'Send Request', I agree to be contacted by <t t-esc="partner.name or ''"/> regarding this service</small>
+                    <small style="color: #6b7280; font-size: 12px;"><t t-set="vinc_label">* By clicking 'Send Request', I agree to be contacted by %(name)s regarding this service</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/></small>
                   </div>
                 </div>
               </div>
@@ -3731,14 +3734,14 @@ class PartnerWebsite(models.Model):
                             <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 24px;">
                                 <a t-att-href="'/website/vcard/download/' + str(partner.id)"
                                    t-att-style="'background-color: ' + (partner.secondary_color or '#2563eb') + '; color: white; padding: 10px 20px; border-radius: 6px; font-size: 0.875rem; font-weight: 500; text-decoration: none; display: inline-block;'">
-                                    Get <t t-esc="partner.name.split(' ')[0] if partner.name else 'Contact'"/>'s Info
+                                    <t t-set="vinc_label">Get %(name)s's Info</t><t t-out="vinc_label % {{'name': partner.name.split(' ')[0] if partner.name else ''}}"/>
                                 </a>
                                 <t t-if="partner.show_form">
                                     <a href="#" 
                                        data-toggle="modal" 
                                        data-target="#leadModal"
                                        t-att-style="'background-color: ' + (partner.primary_color or '#ffffff') + '; color: ' + (partner.secondary_color or '#2563eb') + '; padding: 10px 20px; border-radius: 6px; font-size: 0.875rem; font-weight: 500; text-decoration: none; display: inline-block; border: 1px solid ' + (partner.secondary_color or '#2563eb') + ';'">
-                                        <t t-esc="partner.lead_button_label or 'Get In Touch'"/>
+                                        <t t-if="partner.lead_button_label" t-esc="partner.lead_button_label"/><t t-else="">Get In Touch</t>
                                     </a>
                                 </t>
                             </div>
@@ -4395,7 +4398,7 @@ class PartnerWebsite(models.Model):
                                 <button type="button" id="submitLeadBtn" class="btn" t-att-style="'background-color: ' + (partner.secondary_color or '#8b5cf6') + '; color: white; border: none; font-weight: 600; padding: 12px 24px; border-radius: 8px; width: 100%;'">
                                   Share My Contact
                                 </button>
-                                <small style="text-align: center; color: #6b7280; font-size: 12px; margin: 0;">* By clicking the 'Share My Contact' button, I agree to be contacted by <t t-esc="partner.name or ''"/></small>
+                                <small style="text-align: center; color: #6b7280; font-size: 12px; margin: 0;"><t t-set="vinc_label">* By clicking the 'Share My Contact' button, I agree to be contacted by %(name)s</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/></small>
                               </div>
                             </div>
                           </div>
@@ -4447,7 +4450,7 @@ class PartnerWebsite(models.Model):
                         </form>
                               </div>
                              <div class="modal-footer" style="justify-content: center !important; padding: 0;">
-                            <small>* Your review will be visible once approved by <t t-esc="partner.name or ''"/> </small>
+                            <small><t t-set="vinc_label">* Your review will be visible once approved by %(name)s</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/> </small>
                                             </div>
                                         </div>
                                     </div>
@@ -4518,7 +4521,7 @@ class PartnerWebsite(models.Model):
                                 </form>
                               </div>
                               <div class="modal-footer" style="border-top: none; padding: 0 24px 24px 24px; text-align: center;">
-                                <small style="color: #6b7280; font-size: 12px;">* By clicking 'Send Request', I agree to be contacted by <t t-esc="partner.name or ''"/> regarding this service</small>
+                                <small style="color: #6b7280; font-size: 12px;"><t t-set="vinc_label">* By clicking 'Send Request', I agree to be contacted by %(name)s regarding this service</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/></small>
                               </div>
                             </div>
                           </div>
@@ -4804,7 +4807,7 @@ class PartnerWebsite(models.Model):
                                onmouseover="this.style.transform='scale(0.95)'"
                                onmouseout="this.style.transform='scale(1)'">
                                 <i class="fa fa-paper-plane" style="font-size: 24px;"></i>
-                                <span><t t-esc="partner.lead_button_label or 'INQUIRE'"/></span>
+                                <span><t t-if="partner.lead_button_label" t-esc="partner.lead_button_label"/><t t-else="">INQUIRE</t></span>
                             </a>
                         </t>
                         
@@ -4814,7 +4817,7 @@ class PartnerWebsite(models.Model):
                            onmouseover="this.style.transform='scale(0.95)'"
                            onmouseout="this.style.transform='scale(1)'">
                             <i class="fa fa-download" style="font-size: 24px;"></i>
-                            <span>Get <t t-esc="partner.name.split(' ')[0] if partner.name else 'Contact'"/>'s Info</span>
+                            <span><t t-set="vinc_label">Get %(name)s's Info</t><t t-out="vinc_label % {{'name': partner.name.split(' ')[0] if partner.name else ''}}"/></span>
                         </a>
                     </div>
                 </div>
@@ -5134,7 +5137,7 @@ class PartnerWebsite(models.Model):
                     <div class="s_allow_columns container" style="max-width: 1000px; margin: 0 auto; padding: 0 16px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                             <h4 t-att-style="'color: ' + (partner.secondary_color or '#000') + '; margin: 0; text-align: left; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.05em;'">
-                                <t t-esc="partner.reviews_section_title or 'Testimonials'"/>
+                                <t t-if="partner.reviews_section_title" t-esc="partner.reviews_section_title"/><t t-else="">Testimonials</t>
                             </h4>
                             <a href="#" 
                                data-toggle="modal" 
@@ -5167,7 +5170,7 @@ class PartnerWebsite(models.Model):
                                                     </div>
                                                     <div class="reviewer-info">
                                                         <h5 t-att-style="'color: ' + (partner.secondary_color or '#000') + '; margin: 0; font-weight: 600; font-size: 14px;'">
-                                                            — <t t-esc="review.reviewer_name or 'Anonymous'"/>
+                                                            — <t t-if="review.reviewer_name" t-esc="review.reviewer_name"/><t t-else="">Anonymous</t>
                                                         </h5>
                                                     </div>
                                                 </div>
@@ -5330,7 +5333,7 @@ class PartnerWebsite(models.Model):
                     <button type="button" id="submitLeadBtn" class="btn" t-att-style="'background-color: ' + (partner.secondary_color or '#8b5cf6') + '; color: white; border: none; font-weight: 600; padding: 12px 24px; border-radius: 8px; width: 100%;'">
                       Share My Contact
                     </button>
-                    <small style="text-align: center; color: #6b7280; font-size: 12px; margin: 0;">* By clicking the 'Share My Contact' button, I agree to be contacted by <t t-esc="partner.name or ''"/></small>
+                    <small style="text-align: center; color: #6b7280; font-size: 12px; margin: 0;"><t t-set="vinc_label">* By clicking the 'Share My Contact' button, I agree to be contacted by %(name)s</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/></small>
                   </div>
                 </div>
               </div>
@@ -5347,7 +5350,7 @@ class PartnerWebsite(models.Model):
                       </div>
                       <div style="flex: 1;">
                         <h5 class="modal-title" style="margin: 0; font-weight: 600; font-size: 18px; color: #111827;" id="qrCodeModalLabel">
-                          <t t-esc="partner.name or 'QR Code'"/>
+                          <t t-if="partner.name" t-esc="partner.name"/><t t-else="">QR Code</t>
                         </h5>
                         <p style="margin: 4px 0 0 0; font-size: 14px; color: #6b7280;">Scan to connect</p>
                       </div>
@@ -5358,7 +5361,7 @@ class PartnerWebsite(models.Model):
                   </div>
                   <div class="modal-body" style="padding: 16px 24px 24px 24px; text-align: center;">
                     <p style="margin: 0 0 20px 0; font-size: 14px; color: #6b7280; line-height: 1.5;">
-                      Scan this QR code to quickly save <t t-esc="partner.name or 'this contact'"/>'s information to your device.
+                      <t t-set="vinc_label">Scan this QR code to quickly save %(name)s's information to your device.</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/>
                     </p>
                     <div t-att-style="'background: ' + (partner.primary_color or '#ffffff') + '; padding: 20px; border-radius: 12px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'">
                       <img t-att-src="'/vcard/qr_code/download/' + str(partner.id)" 
@@ -5496,7 +5499,7 @@ class PartnerWebsite(models.Model):
                     </form>
                   </div>
                   <div class="modal-footer" style="border-top: none; padding: 0 24px 24px 24px; text-align: center;">
-                    <small style="color: #6b7280; font-size: 12px;">* By clicking 'Send Request', I agree to be contacted by <t t-esc="partner.name or ''"/> regarding this service</small>
+                    <small style="color: #6b7280; font-size: 12px;"><t t-set="vinc_label">* By clicking 'Send Request', I agree to be contacted by %(name)s regarding this service</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/></small>
                   </div>
                 </div>
               </div>
@@ -5551,7 +5554,7 @@ class PartnerWebsite(models.Model):
             </form>
                   </div>
                  <div class="modal-footer" style="justify-content: center !important; padding: 0;">
-               <small>* Your review will be visible once approved by <t t-esc="partner.name or ''"/> </small>
+               <small><t t-set="vinc_label">* Your review will be visible once approved by %(name)s</t><t t-out="vinc_label % {{'name': partner.name or ''}}"/> </small>
                                </div>
                            </div>
                        </div>

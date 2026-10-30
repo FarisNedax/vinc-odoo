@@ -94,3 +94,23 @@ class TestCardFlow(HttpCase):
         self.authenticate('vinc_mgr', 'vinc_mgr_pw')
         res = self.url_open('/bulk-onboard')
         self.assertEqual(res.status_code, 200)
+
+    def test_public_card_page_in_bosnian(self):
+        bs = self.env['res.lang']._activate_lang('bs_BA')
+        self.env['ir.module.module']._load_module_terms(['qr_code_odoo'], ['bs_BA'], overwrite=True)
+        website = self.env['website'].get_current_website()
+        website.write({'language_ids': [(6, 0, bs.ids)], 'default_lang_id': bs.id})
+        website.company_id.country_id = self.env.ref('base.ba')
+
+        self.card.website_template = 'corporate'
+        action = self.card.action_generate_website_page()
+        self.assertEqual(action['params']['type'], 'success', action['params']['message'])
+
+        res = self.url_open('/ada-lovelace-test')
+        self.assertEqual(res.status_code, 200)
+        for text in ('Pozovi', 'Sačuvaj kontakt', 'Unesite svoje podatke', 'Ime i prezime',
+                     'Pošalji kontakt', 'pristajem da me kontaktira Ada Lovelace'):
+            self.assertIn(text, res.text)
+        self.assertNotIn("Get Ada's Info", res.text)
+        # Lead form phone picker defaults to the company's country.
+        self.assertIn('data-vinc-phone-country="ba"', res.text)

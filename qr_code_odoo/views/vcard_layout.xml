@@ -2,7 +2,7 @@
 <odoo>
     <!-- Custom layout template for vCard pages without header and footer -->
     <template id="vcard_layout" name="vCard Layout">
-        <html>
+        <html t-att-lang="request.env.lang and request.env.lang.replace('_', '-')">
             <head>
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -41,12 +41,23 @@
                     }
                 </style>
             </head>
-            <body class="o_website_fullscreen">
+            <body class="o_website_fullscreen" t-att-data-vinc-phone-country="(request.website.company_id.country_id.code or 'us').lower()">
                 <!-- Main content area without header and footer -->
                 <div class="o_wrap">
                     <div class="o_wrap_content">
                         <t t-out="0"/>
                     </div>
+                </div>
+
+                <!-- Texts used by widget.js; kept here so they are translated with the page -->
+                <div id="vinc_i18n" class="d-none" aria-hidden="true">
+                    <span data-key="submitting">Submitting...</span>
+                    <span data-key="sending">Sending...</span>
+                    <span data-key="error">An error occurred. Please try again.</span>
+                    <span data-key="unknown_error">Unknown error occurred</span>
+                    <span data-key="required">Please fill in all required fields.</span>
+                    <span data-key="yes">Yes</span>
+                    <span data-key="service_thanks">Thank you! Your service request has been sent. We'll be in touch shortly.</span>
                 </div>
             </body>
         </html>

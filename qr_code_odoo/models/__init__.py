@@ -1,4 +1,5 @@
 from . import partner
+from . import card_i18n
 from . import partner_website1
 from . import partner_websites
 from . import partner_videos

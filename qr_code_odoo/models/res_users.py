@@ -58,8 +58,8 @@ class ResUsers(models.Model):
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': 'Email Fix Complete',
-                'message': f'Fixed {fixed_count} user(s) by setting partner email from login.',
+                'title': self.env._('Email Fix Complete'),
+                'message': self.env._('Fixed %s user(s) by setting partner email from login.', fixed_count),
                 'type': 'success',
             },
         }

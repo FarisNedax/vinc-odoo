@@ -169,10 +169,10 @@ class BulkOnboardingBatch(models.Model):
         self.ensure_one()  # Ensure we're working with a single record
         
         if self.status != 'draft':
-            raise UserError("Only draft batches can be processed")
+            raise UserError(self.env._("Only draft batches can be processed"))
         
         if not self.rep_ids:
-            raise UserError("No reps to process. Please add rep data first.")
+            raise UserError(self.env._("No reps to process. Please add rep data first."))
         
         # Clear any existing cache for this batch
         global _batch_mailing_list_cache
@@ -195,8 +195,8 @@ class BulkOnboardingBatch(models.Model):
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': 'Processing Started',
-                'message': f'Batch processing started! Processing {len(self.rep_ids)} users in the background. You can navigate away - refresh the batch list to see progress.',
+                'title': self.env._('Processing Started'),
+                'message': self.env._('Batch processing started! Processing %s users in the background. You can navigate away - refresh the batch list to see progress.', len(self.rep_ids)),
                 'type': 'success',
                 'sticky': False,
             }
@@ -369,11 +369,11 @@ class BulkOnboardingBatch(models.Model):
         email = self._clean_email(rep_data.get('email', ''))
 
         if not email:
-            raise ValidationError("Email is required for rep")
+            raise ValidationError(self.env._("Email is required for rep"))
 
         # Validate email format
         if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
-            raise ValidationError(f"Invalid email format: {rep_data.get('email', '')}")
+            raise ValidationError(self.env._("Invalid email format: %s", rep_data.get('email', '')))
         
         # Check if user already exists (case-insensitive) - including uncommitted records
         # First check in database
@@ -397,11 +397,11 @@ class BulkOnboardingBatch(models.Model):
         # remove the row from the CSV. Other rows in the batch keep going
         # via the existing per-row error handling.
         if not existing_user:
-            raise ValidationError(
-                f"No Odoo user found for {email}. Add this person under "
-                f"Settings → Users & Companies → Users first, then re-run "
-                f"the bulk upload."
-            )
+            raise ValidationError(self.env._(
+                "No Odoo user found for %s. Add this person under "
+                "Settings → Users & Companies → Users first, then re-run "
+                "the bulk upload.", email
+            ))
 
         # Defend against duplicate rep records for the same user in one batch.
         existing_rep = self.env['bulk.onboarding.rep'].sudo().search([
@@ -410,9 +410,9 @@ class BulkOnboardingBatch(models.Model):
             ('id', '!=', rep_record.id),
         ], limit=1)
         if existing_rep:
-            raise ValidationError(
-                f"User {email} appears more than once in this batch."
-            )
+            raise ValidationError(self.env._(
+                "User %s appears more than once in this batch.", email
+            ))
 
         user = existing_user
         rep_record.user_id = user.id
@@ -732,7 +732,7 @@ class BulkOnboardingBatch(models.Model):
             
             # Get headers from row 2 (or row 1 if no explanation row)
             if len(lines) <= start_row:
-                raise ValidationError("CSV file is empty or missing headers")
+                raise ValidationError(self.env._("CSV file is empty or missing headers"))
             
             header_line = lines[start_row]
             headers = [h.strip() for h in csv.reader([header_line]).__next__()]
@@ -785,7 +785,7 @@ class BulkOnboardingBatch(models.Model):
             return rows
         except Exception as e:
             _logger.error(f"Error parsing CSV: {str(e)}", exc_info=True)
-            raise ValidationError(f"Error parsing CSV file: {str(e)}")
+            raise ValidationError(self.env._("Error parsing CSV file: %s", e))
     
     @api.model
     def parse_excel_file(self, file_content, skip_explanation_row=True):
@@ -796,7 +796,7 @@ class BulkOnboardingBatch(models.Model):
         - Row 3+: Data rows
         """
         if not HAS_OPENPYXL:
-            raise ValidationError("Excel file support requires openpyxl. Please install it or use CSV format.")
+            raise ValidationError(self.env._("Excel file support requires openpyxl. Please install it or use CSV format."))
         
         try:
             workbook = openpyxl.load_workbook(io.BytesIO(file_content))
@@ -864,7 +864,7 @@ class BulkOnboardingBatch(models.Model):
             return rows
         except Exception as e:
             _logger.error(f"Error parsing Excel: {str(e)}", exc_info=True)
-            raise ValidationError(f"Error parsing Excel file: {str(e)}")
+            raise ValidationError(self.env._("Error parsing Excel file: %s", e))
 
 
 class BulkOnboardingRep(models.Model):
@@ -910,7 +910,7 @@ class BulkOnboardingRep(models.Model):
     def action_resend_invitation(self):
         """Resend invitation email for this rep"""
         if not self.user_id:
-            raise UserError("No user account found for this rep")
+            raise UserError(self.env._("No user account found for this rep"))
         
         if not self.magic_link_token:
             # Generate new token
@@ -930,7 +930,7 @@ class BulkOnboardingRep(models.Model):
             return True
         except Exception as e:
             _logger.error(f"Error resending invitation for user {self.user_id.id}: {str(e)}", exc_info=True)
-            raise UserError(f"Failed to resend invitation: {str(e)}")
+            raise UserError(self.env._("Failed to resend invitation: %s", e))
 
     def action_reprocess(self):
         """Re-run account + card creation for this single rep.
