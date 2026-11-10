@@ -4,6 +4,13 @@ var isSubmittingServiceRequest = false; // For service request submissions
 // Keep native alert behavior in production
 
 $(document).ready(function() {
+    // Honeypot: off-screen field people never fill; form-filling bots do.
+    $('#leadForm, #reviewForm, #serviceRequestForm').each(function() {
+        if (!$(this).find('[name="company_fax"]').length) {
+            $(this).append('<input type="text" name="company_fax" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;"/>');
+        }
+    });
+
     console.log('Binding lead submission button handler');
     
     // Initialize intl-tel-input country code picker
@@ -366,7 +373,8 @@ $(document).ready(function() {
             phone: phoneNumber,
             partner_id: parseInt($('#partnerId').val(), 10),
             description: $('#notes').val(),
-            lead_tag_ids: leadTagIds // Include the array of tag IDs
+            lead_tag_ids: leadTagIds, // Include the array of tag IDs
+            company_fax: $('#leadForm [name="company_fax"]').val(),
         };
 
         console.log('Submitting data:', formData);
@@ -474,7 +482,8 @@ $(document).ready(function() {
             reviewer_name: $('#reviewerName').val(),
             rating: $('#reviewRating').val(),
             review_text: $('#reviewText').val(),
-            partner_id: parseInt($('#reviewPartnerId').val(), 10)
+            partner_id: parseInt($('#reviewPartnerId').val(), 10),
+            company_fax: $('#reviewForm [name="company_fax"]').val(),
         };
 
         console.log('Submitting review data:', formData);
@@ -711,6 +720,7 @@ $(document).ready(function() {
             service_name: $('#serviceRequestServiceName').val(),
             service_description: $('#serviceRequestServiceDescription').val(),
             notes: $('#serviceRequestNotes').val(),
+            company_fax: $('#serviceRequestForm [name="company_fax"]').val(),
         };
         
         console.log('Service Request - Submitting data:', formData);

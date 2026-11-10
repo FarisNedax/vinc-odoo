@@ -4009,16 +4009,22 @@ If you'd like to save my info again later, here's my card: {vcard_url}
         
     def _generate_vcf(self):
         """Generate vCard (.vcf) file for the partner."""
+        def esc(value):
+            # RFC 6350 3.4: escape \ , ; and newlines so a value cannot add
+            # lines or properties to the card.
+            value = str(value or '').replace('\\', '\\\\').replace(',', '\\,').replace(';', '\\;')
+            return value.replace('\r\n', '\\n').replace('\r', '\\n').replace('\n', '\\n')
+
         vcard = (
             f"BEGIN:VCARD\n"
             f"VERSION:3.0\n"
-            f"FN:{self.name}\n"
-            f"ORG:{self.company_name or ''}\n"
-            f"TITLE:{self.function or ''}\n"
-            f"TEL;TYPE=CELL:{self.phone or ''}\n"
-            f"TEL;TYPE=WORK,VOICE:{self.mobile or ''}\n"
-            f"EMAIL:{self.email or ''}\n"
-            f"ADR;TYPE=WORK,PREF:;;{self.street or ''};{self.city or ''};{self.state_id.name or ''};{self.zip or ''};{self.country_id.name or ''}\n"
+            f"FN:{esc(self.name)}\n"
+            f"ORG:{esc(self.company_name)}\n"
+            f"TITLE:{esc(self.function)}\n"
+            f"TEL;TYPE=CELL:{esc(self.phone)}\n"
+            f"TEL;TYPE=WORK,VOICE:{esc(self.mobile)}\n"
+            f"EMAIL:{esc(self.email)}\n"
+            f"ADR;TYPE=WORK,PREF:;;{esc(self.street)};{esc(self.city)};{esc(self.state_id.name)};{esc(self.zip)};{esc(self.country_id.name)}\n"
             f"END:VCARD"
         )
         return vcard

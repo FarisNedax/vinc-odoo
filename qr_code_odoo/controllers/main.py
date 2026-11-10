@@ -7,6 +7,7 @@ Licensed under OPL-1 (Odoo Proprietary License v1.0)
 Unauthorized copying, modification, or distribution prohibited.
 """
 from odoo import http
+from odoo.exceptions import AccessError
 from odoo.http import request
 from markupsafe import escape as _html_escape
 import json
@@ -14,6 +15,7 @@ import logging
 import base64
 import hashlib
 import re
+import time
 from datetime import datetime, timedelta
 
 _logger = logging.getLogger(__name__)
@@ -121,6 +123,64 @@ def _get_ip_address(req):
     
     # Fallback to REMOTE_ADDR
     return req.httprequest.environ.get('REMOTE_ADDR', '')
+
+
+LIMIT_PREFIX = 'qr_code_odoo.limit.'
+FORM_LIMIT = 10  # posts per IP per 15-minute window
+# Hidden field the card forms send; people never see it, form-filling bots do.
+HONEYPOT_FIELD = 'company_fax'
+TOO_MANY = {'status': 'error', 'message': 'Too many requests from here. Please try again later.'}
+
+
+def _over_limit(req):
+    """Fixed 15-minute bucket per address, shared by the public card forms.
+
+    remote_addr, not X-Forwarded-For: with proxy_mode on, Odoo already
+    resolves the real client address; a client-sent header could be spoofed.
+    """
+    ip = req.httprequest.remote_addr or 'unknown'
+    bucket = int(time.time() // 900)
+    key = f"{LIMIT_PREFIX}{hashlib.sha256(ip.encode()).hexdigest()}.{bucket}"
+    # Lock so parallel posts from one address share the counter.
+    req.env.cr.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", [key])
+    params = req.env['ir.config_parameter'].sudo()
+    # Counters from earlier windows are no longer needed ('not like' wraps in %).
+    params.search([('key', '=like', f'{LIMIT_PREFIX}%'), ('key', 'not like', f'.{bucket}')]).unlink()
+    count = int(params.get_param(key, '0'))
+    if count >= FORM_LIMIT:
+        return True
+    params.set_param(key, str(count + 1))
+    return False
+
+
+def _card_visible(card):
+    """A published card is public; an unpublished one only for users who may read it."""
+    if (card.website_slug or '').startswith('preview-'):
+        return not request.env.user._is_public() and card.website_slug == f'preview-{request.env.uid}'
+    # Same pages the card route checks: the linked page and the page at /<slug>.
+    pages = card.website_page_id | request.env['website.page'].sudo().search(
+        [('url', '=', f'/{card.website_slug}')]) if card.website_slug else card.website_page_id
+    if pages and all(pages.mapped('is_published')):
+        return True
+    if request.env.user._is_public():
+        return False
+    user_card = card.with_env(request.env)
+    try:
+        user_card.check_access_rights('read')
+        user_card.check_access_rule('read')
+    except AccessError:
+        return False
+    return True
+
+
+def _count_once(card, kind):
+    """True the first time this session hits `kind` for this card."""
+    key = f'vinc_counted_{kind}'
+    seen = request.session.get(key) or []
+    if card.id in seen:
+        return False
+    request.session[key] = seen + [card.id]
+    return True
 
 
 def _get_geolocation_from_ip(ip_address):
@@ -323,9 +383,8 @@ class QRCodeController(http.Controller):
         partner = request.env['partner.vcard'].sudo().browse(partner_id)
     
         if partner.exists():
-            # Increment the scan count
-            partner.sudo().write({'qr_code_scan_count': partner.qr_code_scan_count + 1})
-            _logger.info(f"QR code scanned for partner ID {partner_id}. Total scans: {partner.qr_code_scan_count}")
+            if _count_once(partner, 'scan'):
+                partner.sudo().write({'qr_code_scan_count': partner.qr_code_scan_count + 1})
 
             if partner.website_full_url:
                 return request.redirect(partner.website_full_url)
@@ -343,9 +402,8 @@ class QRCodeController(http.Controller):
             ], limit=1)
             
             if vcard:
-                # Increment page view count
-                vcard.sudo().write({'page_view_count': vcard.page_view_count + 1})
-                _logger.info(f"Page view tracked for vCard slug '{slug}' (ID: {vcard.id}). Total views: {vcard.page_view_count}")
+                if _card_visible(vcard) and _count_once(vcard, 'view'):
+                    vcard.sudo().write({'page_view_count': vcard.page_view_count + 1})
                 return {'success': True, 'views': vcard.page_view_count}
             else:
                 _logger.warning(f"Page view tracking: vCard with slug '{slug}' not found")
@@ -359,7 +417,7 @@ class QRCodeController(http.Controller):
         """Serve the QR code image for download"""
         partner = request.env['partner.vcard'].sudo().browse(partner_id)
         
-        if not partner.exists() or not partner.qr_code:
+        if not partner.exists() or not partner.qr_code or not _card_visible(partner):
             return request.not_found()
 
         # Prepare the QR code image for download
@@ -430,6 +488,8 @@ class VCardController(http.Controller):
             if kwargs.get('ref'):
                 request.session['referral_code'] = kwargs.get('ref')
 
+            if is_preview and not _card_visible(vcard):
+                return request.not_found()
             if not is_preview:
                 # Check if website page is published
                 website_page = request.env['website.page'].sudo().search([
@@ -445,10 +505,8 @@ class VCardController(http.Controller):
                     _logger.warning(f"Blocked access to vCard slug '{slug}' (ID: {vcard.id}) - website page via website_page_id is unpublished")
                     return request.not_found()
 
-            # Increment page view count
-            old_count = vcard.page_view_count
-            vcard.sudo().write({'page_view_count': vcard.page_view_count + 1})
-            _logger.info(f"Page view tracked for vCard slug '{slug}' (ID: {vcard.id}). Views: {old_count} -> {vcard.page_view_count}")
+            if not is_preview and _count_once(vcard, 'view'):
+                vcard.sudo().write({'page_view_count': vcard.page_view_count + 1})
 
             # Referral URL is always /get-started
             final_referral_url = '/get-started'
@@ -482,8 +540,10 @@ class VCardController(http.Controller):
     def download_vcard(self, partner_id):
         """Endpoint to download vCard for the given partner."""
         partner = request.env['partner.vcard'].sudo().browse(partner_id)
-        if not partner.exists():
+        if not partner.exists() or not _card_visible(partner):
             return request.not_found()
+        if not _count_once(partner, 'download'):
+            return self._vcf_response(partner)
 
         # Extract tracking data from request (IP, user agent, geolocation, UTM params, etc.)
         tracking_data = _extract_tracking_data_from_request(request)
@@ -519,11 +579,10 @@ class VCardController(http.Controller):
             _logger.error(f"Error creating download tracking record: {e}", exc_info=True)
             # Continue even if tracking fails
 
-        # Increment the download count
-        old_count = partner.vcard_download_count
         partner.sudo().write({'vcard_download_count': partner.vcard_download_count + 1})
-        _logger.info(f"vCard downloaded for partner ID {partner_id}. Total downloads: {old_count} -> {partner.vcard_download_count}")
+        return self._vcf_response(partner)
 
+    def _vcf_response(self, partner):
         vcard_content = partner._generate_vcf()
         # Sanitize + quote. Unsanitised owner-controlled names could forge the
         # extension shown to downloaders or break the header.
@@ -640,6 +699,11 @@ class ReviewController(http.Controller):
         try:
             # Load and log incoming data
             data = json.loads(request.httprequest.data)
+            if data.get(HONEYPOT_FIELD):
+                # Honeypot filled in: answer like a success so bots learn nothing.
+                return {'status': 'success', 'message': 'Thank you!'}
+            if _over_limit(request):
+                return TOO_MANY
             _logger.info(f"Received review data: {data}")
 
             # Extract data from the request
@@ -705,6 +769,11 @@ class LeadController(http.Controller):
         try:
             # Load and log incoming data
             data = json.loads(request.httprequest.data)
+            if data.get(HONEYPOT_FIELD):
+                # Honeypot filled in: answer like a success so bots learn nothing.
+                return {'status': 'success', 'message': 'Thank you!'}
+            if _over_limit(request):
+                return TOO_MANY
             _logger.info(f"Received data: {data}")
 
             # Extract tracking data from request (IP, user agent, geolocation, UTM params, etc.)
@@ -1141,6 +1210,11 @@ class LeadController(http.Controller):
         try:
             # Load and log incoming data
             data = json.loads(request.httprequest.data)
+            if data.get(HONEYPOT_FIELD):
+                # Honeypot filled in: answer like a success so bots learn nothing.
+                return {'status': 'success', 'message': 'Thank you!'}
+            if _over_limit(request):
+                return TOO_MANY
             _logger.info(f"Received service request data: {data}")
 
             # Extract tracking data from request (IP, user agent, geolocation, UTM params, etc.)
