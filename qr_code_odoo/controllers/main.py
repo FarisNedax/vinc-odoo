@@ -8,7 +8,7 @@ Unauthorized copying, modification, or distribution prohibited.
 """
 from odoo import http
 from odoo.exceptions import AccessError
-from odoo.http import request
+from odoo.http import request, content_disposition
 from markupsafe import escape as _html_escape
 import json
 import logging
@@ -431,7 +431,7 @@ class QRCodeController(http.Controller):
             qr_code_data,
             headers=[
                 ('Content-Type', 'image/png'),
-                ('Content-Disposition', f'attachment; filename="{safe_name}_qr_code.png"'),
+                ('Content-Disposition', content_disposition(f'{safe_name}_qr_code.png')),
             ]
         )
 
@@ -594,7 +594,7 @@ class VCardController(http.Controller):
             vcard_content,
             headers=[
                 ('Content-Type', 'text/vcard'),
-                ('Content-Disposition', f'attachment; filename="{vcard_filename}"'),
+                ('Content-Disposition', content_disposition(vcard_filename)),
             ]
         )
 
