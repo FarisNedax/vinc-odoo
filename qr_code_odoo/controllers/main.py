@@ -7,7 +7,7 @@ Licensed under OPL-1 (Odoo Proprietary License v1.0)
 Unauthorized copying, modification, or distribution prohibited.
 """
 from odoo import http
-from odoo.http import request
+from odoo.http import request, content_disposition
 from markupsafe import escape as _html_escape
 import json
 import logging
@@ -377,15 +377,15 @@ class QRCodeController(http.Controller):
         # Prepare the QR code image for download
         qr_code_data = base64.b64decode(partner.qr_code)
 
-        # Sanitize + quote the filename. Owner-controlled name could otherwise
-        # contain `"` or `;` sequences that break Content-Disposition parsing
-        # or forge the extension shown to downloaders.
+        # content_disposition() quotes and RFC 5987-encodes the name (carons
+        # otherwise fail latin-1 header encoding: 502). The regex drops
+        # `"`/`;` so an owner-controlled name cannot forge the extension.
         safe_name = re.sub(r'[^\w.-]', '_', partner.name or 'vcard') or 'vcard'
         return request.make_response(
             qr_code_data,
             headers=[
                 ('Content-Type', 'image/png'),
-                ('Content-Disposition', f'attachment; filename="{safe_name}_qr_code.png"'),
+                ('Content-Disposition', content_disposition(f'{safe_name}_qr_code.png')),
             ]
         )
 
@@ -547,7 +547,7 @@ class VCardController(http.Controller):
             vcard_content,
             headers=[
                 ('Content-Type', 'text/vcard'),
-                ('Content-Disposition', f'attachment; filename="{vcard_filename}"'),
+                ('Content-Disposition', content_disposition(vcard_filename)),
             ]
         )
 

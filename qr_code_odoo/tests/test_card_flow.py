@@ -37,6 +37,17 @@ class TestCardFlow(HttpCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(res.content.startswith(b'\x89PNG'))
 
+    def test_unicode_name_downloads(self):
+        card = self.env['partner.vcard'].create({
+            'name': 'Čengić Đurđa Šćekić Žarko',
+            'website_slug': 'cengic-unicode-test',
+        })
+        for url in (f'/vcard/qr_code/download/{card.id}', f'/website/vcard/download/{card.id}'):
+            res = self.url_open(url)
+            self.assertEqual(res.status_code, 200, url)
+            cd = res.headers['Content-Disposition']
+            self.assertIn("filename*=UTF-8''%C4%8Cengi%C4%87", cd)
+
     def test_vcard_download(self):
         res = self.url_open(f'/website/vcard/download/{self.card.id}')
         self.assertEqual(res.status_code, 200)
