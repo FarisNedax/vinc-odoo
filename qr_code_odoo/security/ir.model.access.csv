@@ -33,3 +33,4 @@ access_bulk_onboarding_batch_manager,bulk.onboarding.batch manager,model_bulk_on
 access_bulk_onboarding_rep_manager,bulk.onboarding.rep manager,model_bulk_onboarding_rep,qr_code_odoo.group_vinc_manager,1,1,1,1
 access_bulk_onboarding_token_manager,bulk.onboarding.token manager,model_bulk_onboarding_token,qr_code_odoo.group_vinc_manager,1,1,1,1
 access_vinc_license_system,vinc.license system admin,model_vinc_license,base.group_system,1,1,1,1
+access_crm_lead_vinc_user,crm.lead from own Vinc cards,crm.model_crm_lead,base.group_user,1,1,0,0
