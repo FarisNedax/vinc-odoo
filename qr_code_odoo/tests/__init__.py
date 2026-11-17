@@ -2,3 +2,4 @@ from . import test_brand_config
 from . import test_vcard_attachment_ownership
 from . import test_lookalike_perf
 from . import test_card_flow
+from . import test_lookalike_access

@@ -669,7 +669,9 @@ class CrmLead(models.Model):
             partner_domain += ['|', ('customer_rank', '>', 0), ('supplier_rank', '=', 0)]
         if self.partner_id and isinstance(self.partner_id.id, int):
             partner_domain.append(('id', '!=', self.partner_id.id))
-        partner_pool = Partner.search(partner_domain, limit=2000)
+        # Only records the user may read: the matches land in many2many fields the form reads as the user,
+        # and a colleague's lead outside the user's record rules raised AccessError on open (demo r4 1.1).
+        partner_pool = Partner.search(partner_domain, limit=2000).with_env(self.env)._filtered_access('read').sudo()
 
         lead_domain = [
             ('type', '=', 'opportunity'),
@@ -679,7 +681,7 @@ class CrmLead(models.Model):
         ]
         if real_self_id:
             lead_domain.insert(0, ('id', '!=', real_self_id))
-        lead_pool = Lead.search(lead_domain, limit=2000)
+        lead_pool = Lead.search(lead_domain, limit=2000).with_env(self.env)._filtered_access('read').sudo()
 
         # One grouped query for every partner's top deal, not one per partner.
         top_revenue = {
